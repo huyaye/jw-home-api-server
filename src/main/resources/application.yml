@@ -1,0 +1,19 @@
+server:
+  port: 9092
+spring:
+  data:
+    mongodb:
+      #host: ec2-3-34-134-27.ap-northeast-2.compute.amazonaws.com
+      #port: 27017
+      #database: jw-home
+      #username: root
+      #password: admin
+      uri: mongodb://root:pass@ec2-54-180-90-149.ap-northeast-2.compute.amazonaws.com:27017/jw-home?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
+      authentication-database: admin
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          introspection-uri: http://localhost:9093/oauth/check_token
+          client-id: jw-api-server
+          client-secret: secret
