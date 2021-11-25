@@ -1,16 +1,13 @@
 package com.jw.home.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
 import com.jw.home.exception.HomeLimitException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
-
-import reactor.core.publisher.Flux;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -23,7 +20,7 @@ public class HomeService {
     private HomeRepository homeRepository;
 
     // HomeLimitException, HomeDuplicatedException
-    public Mono<Home> addHome(String memId, Home home) {
+    public Mono<Home> addHome(Mono<String> memId, Home home) {
         /*
          * Member member = memberRepository.findByMemId(memId);
          * if (member.hasMaxHome()) {;
@@ -40,9 +37,9 @@ public class HomeService {
          * return home;
          */
 
-        Mono<Member> memberMono = memberRepository.findByMemId(memId).log();
+        Mono<Member> memberMono = memId.flatMap(m -> memberRepository.findByMemId(m)).log();
         return memberMono
-                .filter(m -> m.hasMaxHome() == false).log()
+                .filter(m -> !m.hasMaxHome()).log()
                 .switchIfEmpty(Mono.error(HomeLimitException.INSTANCE))
                 .flatMap(m -> homeRepository.save(home)
                         .flatMap(h -> {

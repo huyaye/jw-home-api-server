@@ -2,6 +2,7 @@ package com.jw.home.rest.handler;
 
 import com.jw.home.domain.Home;
 import com.jw.home.exception.HomeLimitException;
+import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddHomeDto;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
@@ -22,6 +23,7 @@ public class HomeHandler {
     private HomeService homeService;
 
     public Mono<ServerResponse> createHome(ServerRequest request) {
+        Mono<String> memId = AuthInfoManager.getRequestMemId();
         return request.bodyToMono(AddHomeDto.class)
                 .map(param -> {
                     Home home = new Home();
@@ -36,7 +38,7 @@ public class HomeHandler {
                             }).collect(Collectors.toList()));
                     return home;
                 })
-                .flatMap(home -> homeService.addHome("jwryu", home))
+                .flatMap(home -> homeService.addHome(memId, home))
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto(null, home)))
                 .onErrorResume(err -> {
