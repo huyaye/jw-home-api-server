@@ -31,7 +31,7 @@ public class Member {
 		return homes.size() >= 3;
 	}
 
-	public void addHome(MemberHome home) throws HomeLimitException {
+	public void addHome(MemberHome home) {
 		if (hasMaxHome()) {
 			throw HomeLimitException.INSTANCE;
 		}

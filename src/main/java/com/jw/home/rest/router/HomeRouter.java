@@ -7,8 +7,6 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import java.util.logging.Handler;
-
 @Configuration
 public class HomeRouter {
     @Bean

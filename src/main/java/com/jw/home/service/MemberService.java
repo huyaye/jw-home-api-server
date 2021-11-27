@@ -1,5 +1,6 @@
 package com.jw.home.service;
 
+import com.jw.home.exception.NotFoundMemberException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,15 +11,11 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class MemberService {
-
 	@Autowired
 	private MemberRepository memberRepository;
 
 	public Mono<Member> getMember(String memId) {
 		return memberRepository.findByMemId(memId)
-				.doOnNext(System.out::println)
-				.doOnError(e -> {
-					System.out.println(e);
-				});
+				.switchIfEmpty(Mono.error(NotFoundMemberException.INSTANCE));
 	}
 }

@@ -1,13 +1,12 @@
 package com.jw.home.rest.handler;
 
 import com.jw.home.domain.Home;
-import com.jw.home.exception.HomeLimitException;
 import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddHomeDto;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
+import com.jw.home.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -21,6 +20,9 @@ public class HomeHandler {
 
     @Autowired
     private HomeService homeService;
+
+    @Autowired
+    private MemberService memberService;
 
     public Mono<ServerResponse> createHome(ServerRequest request) {
         Mono<String> memId = AuthInfoManager.getRequestMemId();
@@ -40,15 +42,6 @@ public class HomeHandler {
                 })
                 .flatMap(home -> homeService.addHome(memId, home))
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto(null, home)))
-                .onErrorResume(err -> {
-                            ServerResponse.BodyBuilder builder = ServerResponse.status(HttpStatus.CONFLICT)
-                                    .contentType(MediaType.APPLICATION_JSON);
-                            if (err instanceof HomeLimitException) {
-                                return builder.body(Mono.just(new ResponseDto(302, null)), ResponseDto.class);
-                            }
-                            return builder.build();
-                        }
-                );
+                        .bodyValue(new ResponseDto(null, home)));
     }
 }
