@@ -1,5 +1,6 @@
 package com.jw.home.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -23,7 +24,7 @@ public class Member {
 
 	private String memId;
 
-	private List<MemberHome> homes;
+	private List<MemberHome> homes = new ArrayList<>();
 //
 //	private List<MemberDevice> devices;
 
