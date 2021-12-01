@@ -1,20 +1,18 @@
 package com.jw.home.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.*;
-
-import javax.management.ConstructorParameters;
-import java.beans.ConstructorProperties;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseDto<T> {
-    private Integer resultCode;
+    private Integer errorCode;
+
+    private String errorMessage;
 
     private T resultData;
 }

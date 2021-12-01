@@ -62,7 +62,7 @@ class HomeHandlerTest {
                 .expectStatus().isOk()
                 .expectBody(new ParameterizedTypeReference<ResponseDto<Home>>() {})
                 .value(res -> {
-                    Assertions.assertThat(res.getResultCode()).isNull();
+                    Assertions.assertThat(res.getErrorCode()).isNull();
                     Assertions.assertThat(res.getResultData()).isEqualTo(home);
                 });
     }

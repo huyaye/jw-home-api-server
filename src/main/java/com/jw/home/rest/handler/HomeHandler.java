@@ -5,7 +5,6 @@ import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddHomeDto;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
-import com.jw.home.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -39,6 +38,6 @@ public class HomeHandler {
                 })
                 .flatMap(home -> homeService.addHome(memId, home))
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto<>(null, home)));
+                        .bodyValue(new ResponseDto<>(null, null, home)));
     }
 }

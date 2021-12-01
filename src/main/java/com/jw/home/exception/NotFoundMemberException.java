@@ -5,6 +5,6 @@ public class NotFoundMemberException extends CustomBusinessException {
 
 	NotFoundMemberException() {
 		super();
-		this.resultCode = 201;
+		this.errorCode = 201;
 	}
 }

@@ -6,5 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CustomBusinessException extends RuntimeException {
-   protected Integer resultCode;
+   protected Integer errorCode;
+
+   protected String errorMessage;
 }

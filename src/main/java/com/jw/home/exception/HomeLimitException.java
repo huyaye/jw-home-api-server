@@ -7,6 +7,7 @@ public class HomeLimitException extends CustomBusinessException {
 
 	HomeLimitException() {
 		super();
-		this.resultCode = 302;
+		this.errorCode = 302;
+		this.errorMessage = "home limit";
 	}
 }
