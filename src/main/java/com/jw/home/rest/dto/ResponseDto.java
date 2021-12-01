@@ -13,8 +13,8 @@ import java.beans.ConstructorProperties;
 @Setter
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseDto {
+public class ResponseDto<T> {
     private Integer resultCode;
 
-    private Object resultData;
+    private T resultData;
 }

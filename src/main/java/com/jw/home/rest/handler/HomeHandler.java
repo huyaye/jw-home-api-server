@@ -21,9 +21,6 @@ public class HomeHandler {
     @Autowired
     private HomeService homeService;
 
-    @Autowired
-    private MemberService memberService;
-
     public Mono<ServerResponse> createHome(ServerRequest request) {
         Mono<String> memId = AuthInfoManager.getRequestMemId();
         return request.bodyToMono(AddHomeDto.class)
@@ -42,6 +39,6 @@ public class HomeHandler {
                 })
                 .flatMap(home -> homeService.addHome(memId, home))
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto(null, home)));
+                        .bodyValue(new ResponseDto<>(null, home)));
     }
 }

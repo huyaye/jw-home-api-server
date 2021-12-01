@@ -11,12 +11,13 @@ public class CustomSecurityConfiguration {
 	@Bean
 	SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
 		// @formatter:off
-		http.authorizeExchange()
-				.pathMatchers("/authentication").hasAuthority("SCOPE_ht.home")
-				.pathMatchers("/api/v1/homes").hasAuthority("SCOPE_ht.home")
-				.anyExchange().authenticated()
-				.and()
-				.oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::opaqueToken);
+		http.csrf().disable()
+			.authorizeExchange()
+			.pathMatchers("/authentication").hasAuthority("SCOPE_ht.home")
+			.pathMatchers("/api/v1/homes").hasAuthority("SCOPE_ht.home")
+			.anyExchange().authenticated()
+			.and()
+			.oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::opaqueToken);
 		// @formatter:on
 		return http.build();
 	}
