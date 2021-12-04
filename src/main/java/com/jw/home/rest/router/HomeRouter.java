@@ -13,6 +13,7 @@ public class HomeRouter {
     public RouterFunction<ServerResponse> homeRoute(HomeHandler homeHandler) {
         return RouterFunctions.route()
                 .POST("/api/v1/homes", homeHandler::createHome)
+                .GET("/api/v1/homes", homeHandler::getHomes)
                 .build();
     }
 

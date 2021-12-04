@@ -93,4 +93,17 @@ class HomeServiceTest {
         StepVerifier.create(homeMono)
                 .verifyError(HomeDuplicatedException.class);
     }
+
+    @Test
+    void getAllHomesOfMember() {
+        Member member = new Member();
+
+        when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
+        when(homeRepository.findAllById(Collections.emptyList())).thenReturn(Flux.just(homeToAdd));
+
+        final Flux<Home> homeFlux = homeService.getHomes(Mono.just("jw"));
+        StepVerifier.create(homeFlux)
+                .expectNext(homeToAdd)
+                .verifyComplete();
+    }
 }

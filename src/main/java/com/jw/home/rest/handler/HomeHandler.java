@@ -3,6 +3,7 @@ package com.jw.home.rest.handler;
 import com.jw.home.domain.Home;
 import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddHomeDto;
+import com.jw.home.rest.dto.GetHomesDto;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,5 +40,13 @@ public class HomeHandler {
                 .flatMap(home -> homeService.addHome(memId, home))
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, home)));
+    }
+
+    public Mono<ServerResponse> getHomes(ServerRequest request) {
+        Mono<String> memId = AuthInfoManager.getRequestMemId();
+        return homeService.getHomes(memId)
+                .collectList()
+                .flatMap(homes -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, new GetHomesDto(homes))));
     }
 }

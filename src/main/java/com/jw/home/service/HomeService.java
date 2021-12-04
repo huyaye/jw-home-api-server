@@ -8,6 +8,7 @@ import com.jw.home.exception.HomeLimitException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.stream.Collectors;
@@ -38,6 +39,12 @@ public class HomeService {
                             m.addHome(memberHome);
                             return memberRepository.save(m).thenReturn(h);
                         }));
+    }
+
+    public Flux<Home> getHomes(Mono<String> memId) {
+        Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId);
+        return memberMono
+                .flatMapMany(member -> homeRepository.findAllById(member.getHomes().stream().map(MemberHome::getHomeId).collect(Collectors.toList())));
     }
 
     private Mono<Member> checkHomeNameDuplicated(Member member, String homeName) {
