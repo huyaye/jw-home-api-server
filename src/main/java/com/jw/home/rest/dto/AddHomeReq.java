@@ -8,14 +8,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jw.home.common.spec.HomeSecurityMode;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddHomeDto {
+public class AddHomeReq {
 	@Getter
 	@Setter
 	public static class AddRoomDto {

@@ -3,8 +3,10 @@ package com.jw.home.rest.handler;
 import com.jw.home.common.spec.HomeSecurityMode;
 import com.jw.home.config.CustomSecurityConfiguration;
 import com.jw.home.domain.Home;
-import com.jw.home.rest.dto.AddHomeDto;
-import com.jw.home.rest.dto.GetHomesDto;
+import com.jw.home.domain.mapper.HomeMapper;
+import com.jw.home.rest.dto.AddHomeReq;
+import com.jw.home.rest.dto.AddHomeRes;
+import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.rest.router.HomeRouter;
 import com.jw.home.service.HomeService;
@@ -55,7 +57,7 @@ class HomeHandlerTest {
     void createHome() {
         when(homeService.addHome(any(), any(Home.class))).thenReturn(Mono.just(home));
 
-        AddHomeDto addHomeDto = new AddHomeDto();
+        AddHomeReq addHomeDto = new AddHomeReq();
         addHomeDto.setHomeName("testHome");
         addHomeDto.setTimezone("Asia/Seoul");
         addHomeDto.setSecurityMode(HomeSecurityMode.none);
@@ -65,13 +67,13 @@ class HomeHandlerTest {
                         .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
                 .post().uri("/api/v1/homes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(addHomeDto), AddHomeDto.class)
+                .body(Mono.just(addHomeDto), AddHomeReq.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<ResponseDto<Home>>() {})
+                .expectBody(new ParameterizedTypeReference<ResponseDto<AddHomeRes>>() {})
                 .value(res -> {
                     Assertions.assertThat(res.getErrorCode()).isNull();
-                    Assertions.assertThat(res.getResultData()).isEqualTo(home);
+                    Assertions.assertThat(res.getResultData()).isEqualTo(HomeMapper.INSTANCE.toAddHomeRes(home));
                 });
     }
 
@@ -83,11 +85,11 @@ class HomeHandlerTest {
                 .get().uri("/api/v1/homes")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<ResponseDto<GetHomesDto>>() {})
+                .expectBody(new ParameterizedTypeReference<ResponseDto<GetHomesRes>>() {})
                 .value(res -> {
-                    final GetHomesDto resultData = res.getResultData();
+                    final GetHomesRes resultData = res.getResultData();
                     Assertions.assertThat(resultData.getHomes().size()).isEqualTo(1);
-                    Assertions.assertThat(resultData.getHomes().get(0)).isEqualTo(home);
+                    Assertions.assertThat(resultData.getHomes().get(0)).isEqualTo(HomeMapper.INSTANCE.toGetHomesHomeDto(home));
                 });
 
         when(homeService.getHomes(any())).thenReturn(Flux.empty());
@@ -96,9 +98,9 @@ class HomeHandlerTest {
                 .get().uri("/api/v1/homes")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<ResponseDto<GetHomesDto>>() {})
+                .expectBody(new ParameterizedTypeReference<ResponseDto<GetHomesRes>>() {})
                 .value(res -> {
-                    final GetHomesDto resultData = res.getResultData();
+                    final GetHomesRes resultData = res.getResultData();
                     Assertions.assertThat(resultData.getHomes().size()).isEqualTo(0);
                 });
     }

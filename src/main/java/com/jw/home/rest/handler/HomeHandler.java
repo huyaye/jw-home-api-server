@@ -1,9 +1,9 @@
 package com.jw.home.rest.handler;
 
-import com.jw.home.domain.Home;
+import com.jw.home.domain.mapper.HomeMapper;
 import com.jw.home.rest.AuthInfoManager;
-import com.jw.home.rest.dto.AddHomeDto;
-import com.jw.home.rest.dto.GetHomesDto;
+import com.jw.home.rest.dto.AddHomeReq;
+import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +13,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.stream.Collectors;
-
 @Component
 public class HomeHandler {
 
@@ -23,30 +21,20 @@ public class HomeHandler {
 
     public Mono<ServerResponse> createHome(ServerRequest request) {
         Mono<String> memId = AuthInfoManager.getRequestMemId();
-        return request.bodyToMono(AddHomeDto.class)
-                .map(param -> {
-                    Home home = new Home();
-                    home.setHomeName(param.getHomeName());
-                    home.setTimezone(param.getTimezone());
-                    home.setSecurityMode(param.getSecurityMode());
-                    home.setRooms(param.getRooms().stream()
-                            .map(s -> {
-                                Home.Room room = new Home.Room();
-                                room.setRoomName(s.getRoomName());
-                                return room;
-                            }).collect(Collectors.toList()));
-                    return home;
-                })
+        return request.bodyToMono(AddHomeReq.class)
+                .map(HomeMapper.INSTANCE::toHome)
                 .flatMap(home -> homeService.addHome(memId, home))
-                .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto<>(null, null, home)));
+                .map(HomeMapper.INSTANCE::toAddHomeRes)
+                .flatMap(res -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, res)));
     }
 
     public Mono<ServerResponse> getHomes(ServerRequest request) {
         Mono<String> memId = AuthInfoManager.getRequestMemId();
         return homeService.getHomes(memId)
+                .map(HomeMapper.INSTANCE::toGetHomesHomeDto)
                 .collectList()
                 .flatMap(homes -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto<>(null, null, new GetHomesDto(homes))));
+                        .bodyValue(new ResponseDto<>(null, null, new GetHomesRes(homes))));
     }
 }
