@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +36,7 @@ public class HomeService {
                 .filter(m -> !m.hasMaxHome())
                 .switchIfEmpty(Mono.error(HomeLimitException.INSTANCE))
                 .flatMap(m -> checkHomeNameDuplicated(m, home.getHomeName()))
+                .doOnNext(m -> home.setUserIds(Collections.singletonList(m.getMemId())))
                 .flatMap(m -> homeRepository.save(home)
                         .flatMap(h -> {
                             MemberHome memberHome = new MemberHome();
@@ -57,4 +62,35 @@ public class HomeService {
                 });
     }
 
+    // TODO Transaction?
+    public Flux<String> deleteHomes(Mono<String> memId, List<String> homeIds) {
+        Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId);
+        return memberMono
+                .flatMap(member -> {
+                    List<MemberHome> targetHomes = new ArrayList<>();
+                    member.getHomes().stream()
+                            .filter(home -> homeIds.contains(home.getHomeId()))
+                            .forEach(targetHomes::add);
+                    if (targetHomes.size() > 0) {
+                        member.getHomes().removeAll(targetHomes);
+                        return memberRepository.save(member)
+                                .thenReturn(new AbstractMap.SimpleEntry<>(member.getMemId(), targetHomes.stream().map(MemberHome::getHomeId) ));
+                    } else {
+                        return Mono.empty();
+                    }
+                })
+                .flatMapMany(m -> {
+                    String memberId = m.getKey();
+                    List<String> targetHomeIds = m.getValue().collect(Collectors.toList());
+                    return homeRepository.findAllById(targetHomeIds)
+                            .doOnNext(home -> home.getUserIds().remove(memberId))
+                            .flatMap(home -> {
+                                if (home.withoutMember()) {
+                                    return homeRepository.delete(home).thenReturn(home.getId());
+                                } else {
+                                    return homeRepository.save(home).thenReturn(home.getId());
+                                }
+                            });
+                });
+    }
 }

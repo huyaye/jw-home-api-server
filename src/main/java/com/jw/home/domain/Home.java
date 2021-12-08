@@ -1,14 +1,14 @@
 package com.jw.home.domain;
 
-import java.util.List;
-
-import lombok.*;
+import com.jw.home.common.spec.HomeSecurityMode;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.jw.home.common.spec.HomeSecurityMode;
-
-import javax.management.ConstructorParameters;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,4 +32,10 @@ public class Home {
 	private HomeSecurityMode securityMode;
 
 	private List<Room> rooms;
+
+	private List<String> userIds;
+
+	public boolean withoutMember() {
+		return userIds == null || userIds.isEmpty();
+	}
 }

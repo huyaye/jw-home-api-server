@@ -3,6 +3,7 @@ package com.jw.home.rest.handler;
 import com.jw.home.domain.mapper.HomeMapper;
 import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddHomeReq;
+import com.jw.home.rest.dto.DeleteHomesReqRes;
 import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.HomeService;
@@ -36,5 +37,14 @@ public class HomeHandler {
                 .collectList()
                 .flatMap(homes -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, new GetHomesRes(homes))));
+    }
+
+    public Mono<ServerResponse> deleteHomes(ServerRequest request) {
+        Mono<String> memId = AuthInfoManager.getRequestMemId();
+        return request.bodyToMono(DeleteHomesReqRes.class)
+                .flatMapMany(req -> homeService.deleteHomes(memId, req.getHomeIds()))
+                .collectList()
+                .flatMap(deletedIds -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, new DeleteHomesReqRes(deletedIds))));
     }
 }
