@@ -4,10 +4,7 @@ import com.jw.home.common.spec.HomeSecurityMode;
 import com.jw.home.config.CustomSecurityConfiguration;
 import com.jw.home.domain.Home;
 import com.jw.home.domain.mapper.HomeMapper;
-import com.jw.home.rest.dto.AddHomeReq;
-import com.jw.home.rest.dto.AddHomeRes;
-import com.jw.home.rest.dto.GetHomesRes;
-import com.jw.home.rest.dto.ResponseDto;
+import com.jw.home.rest.dto.*;
 import com.jw.home.rest.router.HomeRouter;
 import com.jw.home.service.HomeService;
 import org.assertj.core.api.Assertions;
@@ -18,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,8 +24,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOpaqueToken;
 
@@ -102,6 +102,24 @@ class HomeHandlerTest {
                 .value(res -> {
                     final GetHomesRes resultData = res.getResultData();
                     Assertions.assertThat(resultData.getHomes().size()).isEqualTo(0);
+                });
+    }
+
+    @Test
+    void deleteHomes() {
+        when(homeService.addHome(any(), any(Home.class))).thenReturn(Mono.just(home));
+        when(homeService.deleteHomes(any(), eq(List.of("1234", "5678")))).thenReturn(Flux.just("5678"));
+
+        webClient.mutateWith(mockOpaqueToken()
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
+                .method(HttpMethod.DELETE).uri("/api/v1/homes")
+                .body(Mono.just(new DeleteHomesReqRes(List.of("1234", "5678"))), DeleteHomesReqRes.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<ResponseDto<DeleteHomesReqRes>>() {})
+                .value(res -> {
+                    Assertions.assertThat(res.getErrorCode()).isNull();
+                    Assertions.assertThat(res.getResultData().getHomeIds()).hasSize(1).contains("5678");
                 });
     }
 }

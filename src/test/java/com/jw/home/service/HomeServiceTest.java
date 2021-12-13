@@ -18,7 +18,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -105,5 +107,35 @@ class HomeServiceTest {
         StepVerifier.create(homeFlux)
                 .expectNext(homeToAdd)
                 .verifyComplete();
+    }
+
+    @Test
+    void deleteHomesOfMember() {
+        Member member = new Member();
+        member.setMemId("jw");
+        member.addHome(new MemberHome("5678"));
+
+        Home home = new Home();
+        home.setId("5678");
+        home.setHomeName("testHome");
+        home.setTimezone("Asia/Seoul");
+        home.setUserIds(new ArrayList<>(List.of("jw", "my")));
+        home.setSecurityMode(HomeSecurityMode.none);
+        home.setRooms(Collections.emptyList());
+
+        when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
+        when(memberRepository.save(any())).thenReturn(Mono.just(member));
+        when(homeRepository.findAllById(List.of("5678"))).thenReturn(Flux.just(home));
+        when(homeRepository.save(any())).thenReturn(Mono.just(home));
+        when(homeRepository.delete(any())).thenReturn(Mono.empty());
+
+        final Flux<String> deletedIds = homeService.deleteHomes(Mono.just("jw"), List.of("1234", "5678"));
+        StepVerifier.create(deletedIds)
+                .expectNext("5678")
+                .verifyComplete();
+
+        Assertions.assertThat(home.getUserIds().size()).isEqualTo(1);
+        Assertions.assertThat(home.getUserIds().get(0)).isEqualTo("my");
+        Assertions.assertThat(member.getHomes()).isEmpty();
     }
 }
