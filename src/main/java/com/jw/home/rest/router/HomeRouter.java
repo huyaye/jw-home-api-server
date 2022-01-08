@@ -14,7 +14,8 @@ public class HomeRouter {
         return RouterFunctions.route()
                 .POST("/api/v1/homes", homeHandler::createHome)
                 .GET("/api/v1/homes", homeHandler::getHomes)
-                .DELETE("/api/v1/homes", homeHandler::deleteHomes)
+                .DELETE("/api/v1/homes", homeHandler::withdrawHomes)
+                .POST("/api/v1/homes/invite", homeHandler::inviteHome)
                 .build();
     }
 

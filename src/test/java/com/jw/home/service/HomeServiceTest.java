@@ -1,13 +1,17 @@
 package com.jw.home.service;
 
 import com.jw.home.common.spec.HomeSecurityMode;
+import com.jw.home.common.spec.HomeState;
 import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
 import com.jw.home.exception.HomeDuplicatedException;
 import com.jw.home.exception.HomeLimitException;
+import com.jw.home.exception.InvalidHomeException;
+import com.jw.home.exception.InvalidMemberException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.InviteHomeReq;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +22,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +76,7 @@ class HomeServiceTest {
     void addHomeFailedHomeLimit() {
         Member member = new Member();
         while (!member.hasMaxHome()) {
-            member.addHome(new MemberHome());
+            member.addHome(MemberHome.builder().build());
         }
         when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
 
@@ -113,13 +117,13 @@ class HomeServiceTest {
     void deleteHomesOfMember() {
         Member member = new Member();
         member.setMemId("jw");
-        member.addHome(new MemberHome("5678"));
+        member.addHome(MemberHome.builder().homeId("5678").state(HomeState.shared).build());
 
         Home home = new Home();
         home.setId("5678");
         home.setHomeName("testHome");
         home.setTimezone("Asia/Seoul");
-        home.setUserIds(new ArrayList<>(List.of("jw", "my")));
+        home.setSharedMemberIds(new HashSet<>(List.of("jw", "my")));
         home.setSecurityMode(HomeSecurityMode.none);
         home.setRooms(Collections.emptyList());
 
@@ -129,13 +133,79 @@ class HomeServiceTest {
         when(homeRepository.save(any())).thenReturn(Mono.just(home));
         when(homeRepository.delete(any())).thenReturn(Mono.empty());
 
-        final Flux<String> deletedIds = homeService.deleteHomes(Mono.just("jw"), List.of("1234", "5678"));
+        final Flux<String> deletedIds = homeService.withdrawHomes(Mono.just("jw"), List.of("1234", "5678"));
         StepVerifier.create(deletedIds)
                 .expectNext("5678")
                 .verifyComplete();
 
-        Assertions.assertThat(home.getUserIds().size()).isEqualTo(1);
-        Assertions.assertThat(home.getUserIds().get(0)).isEqualTo("my");
+        Assertions.assertThat(home.getSharedMemberIds().size()).isEqualTo(1);
+        Assertions.assertThat(home.getSharedMemberIds().stream().findAny().get()).isEqualTo("my");
         Assertions.assertThat(member.getHomes()).isEmpty();
+    }
+
+    @Test
+    void inviteHomeSucceed() {
+        Member host = new Member();
+        host.setMemId("host");
+        host.addHome(MemberHome.builder().homeId("1234").state(HomeState.shared).build());
+
+        Member guest = new Member();
+        guest.setMemId("guest");
+
+        Home home = new Home();
+        home.setId("1234");
+        home.setSharedMemberIds(new HashSet<>(List.of("host")));
+
+        when(memberRepository.findByMemId("host")).thenReturn(Mono.just(host));
+        when(memberRepository.findByMemId("guest")).thenReturn(Mono.just(guest));
+        when(homeRepository.findById("1234")).thenReturn(Mono.just(home));
+        when(memberRepository.save(guest)).thenReturn(Mono.just(guest));
+        when(homeRepository.save(home)).thenReturn(Mono.just(home));
+
+        InviteHomeReq req = new InviteHomeReq("1234", "guest");
+        Mono<Home> homeMono = homeService.inviteHome(Mono.just("host"), req);
+        StepVerifier.create(homeMono)
+                .expectNext(home)
+                .verifyComplete();
+
+        Assertions.assertThat(home.getInvitedMemberIds()).contains("guest");
+    }
+
+    @Test
+    // Home 초대 실패 - 초대하는 사용자가 권한이 없는 Home
+    void inviteHomeFailedInvalidHome() {
+        Member host = new Member();
+        host.setMemId("host");
+
+        when(memberRepository.findByMemId("host")).thenReturn(Mono.just(host));
+
+        InviteHomeReq req = new InviteHomeReq("1234", "guest");
+        Mono<Home> homeMono = homeService.inviteHome(Mono.just("host"), req);
+        StepVerifier.create(homeMono)
+                .verifyError(InvalidHomeException.class);
+    }
+
+    @Test
+    // Home 초대 실패 - 초대받는 사용자가 Home 에 이미 관계(공유 or 초대) 가 있는 경우
+    void inviteHomeFailedInvalidMember() {
+        Member host = new Member();
+        host.setMemId("host");
+        host.addHome(MemberHome.builder().homeId("1234").state(HomeState.shared).build());
+
+        Member guest = new Member();
+        guest.setMemId("guest");
+
+        Home home = new Home();
+        home.setId("1234");
+        home.setSharedMemberIds(new HashSet<>(List.of("host", "guest")));
+
+        when(memberRepository.findByMemId("host")).thenReturn(Mono.just(host));
+        when(memberRepository.findByMemId("guest")).thenReturn(Mono.just(guest));
+        when(homeRepository.findById("1234")).thenReturn(Mono.just(home));
+
+        InviteHomeReq req = new InviteHomeReq("1234", "guest");
+        Mono<Home> homeMono = homeService.inviteHome(Mono.just("host"), req);
+        StepVerifier.create(homeMono)
+                .verifyError(InvalidMemberException.class);
     }
 }

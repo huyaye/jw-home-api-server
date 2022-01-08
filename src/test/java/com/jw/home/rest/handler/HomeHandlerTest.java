@@ -106,9 +106,9 @@ class HomeHandlerTest {
     }
 
     @Test
-    void deleteHomes() {
+    void withdrawHomes() {
         when(homeService.addHome(any(), any(Home.class))).thenReturn(Mono.just(home));
-        when(homeService.deleteHomes(any(), eq(List.of("1234", "5678")))).thenReturn(Flux.just("5678"));
+        when(homeService.withdrawHomes(any(), eq(List.of("1234", "5678")))).thenReturn(Flux.just("5678"));
 
         webClient.mutateWith(mockOpaqueToken()
                         .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))

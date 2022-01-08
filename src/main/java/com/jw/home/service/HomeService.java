@@ -1,19 +1,23 @@
 package com.jw.home.service;
 
+import com.jw.home.common.spec.HomeState;
 import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
 import com.jw.home.exception.HomeDuplicatedException;
 import com.jw.home.exception.HomeLimitException;
+import com.jw.home.exception.InvalidHomeException;
+import com.jw.home.exception.InvalidMemberException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.InviteHomeReq;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,11 +40,12 @@ public class HomeService {
                 .filter(m -> !m.hasMaxHome())
                 .switchIfEmpty(Mono.error(HomeLimitException.INSTANCE))
                 .flatMap(m -> checkHomeNameDuplicated(m, home.getHomeName()))
-                .doOnNext(m -> home.setUserIds(Collections.singletonList(m.getMemId())))
+                .doOnNext(m -> home.addSharedMemberId(m.getMemId()))
                 .flatMap(m -> homeRepository.save(home)
                         .flatMap(h -> {
-                            MemberHome memberHome = new MemberHome();
-                            memberHome.setHomeId(h.getId());
+                            MemberHome memberHome = MemberHome.builder()
+                                    .homeId(h.getId())
+                                    .state(HomeState.shared).build();
                             m.addHome(memberHome);
                             return memberRepository.save(m).thenReturn(h);
                         }));
@@ -63,7 +68,7 @@ public class HomeService {
     }
 
     // TODO Transaction?
-    public Flux<String> deleteHomes(Mono<String> memId, List<String> homeIds) {
+    public Flux<String> withdrawHomes(Mono<String> memId, List<String> homeIds) {
         Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId);
         return memberMono
                 .flatMap(member -> {
@@ -74,7 +79,7 @@ public class HomeService {
                     if (targetHomes.size() > 0) {
                         member.getHomes().removeAll(targetHomes);
                         return memberRepository.save(member)
-                                .thenReturn(new AbstractMap.SimpleEntry<>(member.getMemId(), targetHomes.stream().map(MemberHome::getHomeId) ));
+                                .thenReturn(new AbstractMap.SimpleEntry<>(member.getMemId(), targetHomes.stream().map(MemberHome::getHomeId)));
                     } else {
                         return Mono.empty();
                     }
@@ -83,14 +88,53 @@ public class HomeService {
                     String memberId = m.getKey();
                     List<String> targetHomeIds = m.getValue().collect(Collectors.toList());
                     return homeRepository.findAllById(targetHomeIds)
-                            .doOnNext(home -> home.getUserIds().remove(memberId))
+                            .doOnNext(home -> home.getSharedMemberIds().remove(memberId))
                             .flatMap(home -> {
-                                if (home.withoutMember()) {
+                                if (home.hasNoRelatedMembers()) {
                                     return homeRepository.delete(home).thenReturn(home.getId());
                                 } else {
                                     return homeRepository.save(home).thenReturn(home.getId());
                                 }
                             });
+                });
+    }
+
+    // InvalidMemberException, InvalidHomeException, HomeLimitException
+    public Mono<Home> inviteHome(Mono<String> hostMemberId, InviteHomeReq inviteInfo) {
+        String homeId = inviteInfo.getHomeId();
+        String guestMemberId = inviteInfo.getMemberId();
+
+        return hostMemberId
+                .flatMap(memberRepository::findByMemId)
+                // hostMemberId 가 초대할 수 있는 Home 인지 검사
+                .filter(member -> member.getHomes().stream()
+                        .anyMatch(home -> home.getHomeId().equals(homeId) && home.getState().equals(HomeState.shared)))
+                .switchIfEmpty(Mono.error(InvalidHomeException.INSTANCE))
+                .flatMap(host -> memberRepository.findByMemId(guestMemberId)
+                        // guestMemberId 가 초대할 수 있는 사용자인지 검사
+                        .switchIfEmpty(Mono.error(InvalidMemberException.INSTANCE))
+                        .map(guest -> Tuples.of(host.getMemId(), guest)))
+                .flatMap(tuple -> homeRepository.findById(homeId)
+                        .map(home -> Tuples.of(tuple.getT1(), tuple.getT2(), home)))
+                .flatMap(tuple -> {
+                    String hostId = tuple.getT1();
+                    Member guest = tuple.getT2();
+                    Home home = tuple.getT3();
+                    // guestMember 가 이미 home 에 연관(공유, 초대)된 사용자인지 검사
+                    if (home.hasMember(guest.getMemId())) {
+                        return Mono.error(InvalidMemberException.INSTANCE);
+                    }
+                    // member 컬렉션 업데이트
+                    MemberHome memberHome = MemberHome.builder()
+                            .homeId(home.getId())
+                            .state(HomeState.invited)
+                            .invitor(hostId).build();
+                    guest.addHome(memberHome);
+                    // home 컬렉션 업데이트
+                    home.addInvitedMemberId(guest.getMemId());
+
+                    return memberRepository.save(guest)
+                            .then(homeRepository.save(home));
                 });
     }
 }

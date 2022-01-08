@@ -1,6 +1,7 @@
 package com.jw.home.rest.dto;
 
 import com.jw.home.common.spec.HomeSecurityMode;
+import com.jw.home.common.spec.HomeState;
 import lombok.*;
 
 import java.util.List;
@@ -20,6 +21,8 @@ public class GetHomesRes {
 		private String timezone;
 		private HomeSecurityMode securityMode;
 		private List<RoomDto> rooms;
+		private HomeState state;
+		private String invitor;
 	}
 
 	@Getter

@@ -8,7 +8,9 @@ import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -33,9 +35,32 @@ public class Home {
 
 	private List<Room> rooms;
 
-	private List<String> userIds;
+	private Set<String> sharedMemberIds;
 
-	public boolean withoutMember() {
-		return userIds == null || userIds.isEmpty();
+	private Set<String> invitedMemberIds;
+
+	public boolean hasNoRelatedMembers() {
+		return (sharedMemberIds == null || sharedMemberIds.isEmpty()) &&
+				(invitedMemberIds == null || invitedMemberIds.isEmpty());
 	}
+
+	public boolean hasMember(String memId) {
+		return (sharedMemberIds != null && sharedMemberIds.contains(memId)) ||
+				(invitedMemberIds != null && invitedMemberIds.contains(memId));
+	}
+
+	public void addInvitedMemberId(String memberId) {
+		if (invitedMemberIds == null) {
+			invitedMemberIds = new HashSet<>();
+		}
+		invitedMemberIds.add(memberId);
+	}
+
+	public void addSharedMemberId(String memberId) {
+		if (sharedMemberIds == null) {
+			sharedMemberIds = new HashSet<>();
+		}
+		sharedMemberIds.add(memberId);
+	}
+
 }

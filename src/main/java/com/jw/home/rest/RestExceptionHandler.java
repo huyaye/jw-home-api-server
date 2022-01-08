@@ -25,7 +25,7 @@ public class RestExceptionHandler extends AbstractErrorWebExceptionHandler {
 
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
-        return RouterFunctions.route(RequestPredicates.path("/api/v1/homes"), this::handleErrorResponse);
+        return RouterFunctions.route(RequestPredicates.path("/api/**"), this::handleErrorResponse);
     }
 
     private Mono<ServerResponse> handleErrorResponse(final ServerRequest request) {

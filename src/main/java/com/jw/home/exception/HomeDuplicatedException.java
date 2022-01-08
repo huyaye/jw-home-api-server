@@ -7,7 +7,7 @@ public class HomeDuplicatedException extends CustomBusinessException {
 
 	HomeDuplicatedException() {
 		super();
-		this.errorCode = 301;
+		this.errorCode = 302;
 		this.errorMessage = "home duplicated";
 	}
 }
