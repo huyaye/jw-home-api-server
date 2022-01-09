@@ -2,6 +2,7 @@ package com.jw.home.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -37,5 +38,9 @@ public class Member {
 			throw HomeLimitException.INSTANCE;
 		}
 		homes.add(home);
+	}
+
+	public List<String> getHomeIds() {
+		return homes.stream().map(MemberHome::getHomeId).collect(Collectors.toList());
 	}
 }

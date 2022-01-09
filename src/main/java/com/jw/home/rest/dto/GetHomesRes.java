@@ -1,5 +1,6 @@
 package com.jw.home.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jw.home.common.spec.HomeSecurityMode;
 import com.jw.home.common.spec.HomeState;
 import lombok.*;
@@ -15,6 +16,7 @@ public class GetHomesRes {
 	@Getter
 	@Setter
 	@EqualsAndHashCode
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class HomeDto {
 		private String id;
 		private String homeName;

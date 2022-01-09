@@ -79,7 +79,8 @@ class HomeHandlerTest {
 
     @Test
     void getHomes() {
-        when(homeService.getHomes(any())).thenReturn(Flux.just(home));
+        GetHomesRes.HomeDto homeDto = HomeMapper.INSTANCE.toGetHomesHomeDto(home);
+        when(homeService.getHomes(any())).thenReturn(Flux.just(homeDto));
         webClient.mutateWith(mockOpaqueToken()
                 .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
                 .get().uri("/api/v1/homes")

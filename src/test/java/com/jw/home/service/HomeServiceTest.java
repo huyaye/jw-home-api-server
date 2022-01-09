@@ -11,6 +11,7 @@ import com.jw.home.exception.InvalidHomeException;
 import com.jw.home.exception.InvalidMemberException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.InviteHomeReq;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,13 +104,18 @@ class HomeServiceTest {
     @Test
     void getAllHomesOfMember() {
         Member member = new Member();
+        member.setMemId("jw");
+        member.addHome(MemberHome.builder().homeId("61a22c8895f77204b8f602ab").state(HomeState.shared).build());
 
         when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
-        when(homeRepository.findAllById(Collections.emptyList())).thenReturn(Flux.just(homeToAdd));
+        when(homeRepository.findAllById(List.of("61a22c8895f77204b8f602ab"))).thenReturn(Flux.just(homeToAdd));
 
-        final Flux<Home> homeFlux = homeService.getHomes(Mono.just("jw"));
+        Flux<GetHomesRes.HomeDto> homeFlux = homeService.getHomes(Mono.just("jw"));
         StepVerifier.create(homeFlux)
-                .expectNext(homeToAdd)
+                .consumeNextWith(homeDto -> {
+                    Assertions.assertThat(homeDto.getHomeName()).isEqualTo("testHome");
+                    Assertions.assertThat(homeDto.getState()).isEqualTo(HomeState.shared);
+                })
                 .verifyComplete();
     }
 

@@ -32,7 +32,6 @@ public class HomeHandler {
     public Mono<ServerResponse> getHomes(ServerRequest request) {
         Mono<String> memId = AuthInfoManager.getRequestMemId();
         return homeService.getHomes(memId)
-                .map(HomeMapper.INSTANCE::toGetHomesHomeDto)
                 .collectList()
                 .flatMap(homes -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, new GetHomesRes(homes))));

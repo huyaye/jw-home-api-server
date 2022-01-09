@@ -4,12 +4,14 @@ import com.jw.home.common.spec.HomeState;
 import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
+import com.jw.home.domain.mapper.HomeMapper;
 import com.jw.home.exception.HomeDuplicatedException;
 import com.jw.home.exception.HomeLimitException;
 import com.jw.home.exception.InvalidHomeException;
 import com.jw.home.exception.InvalidMemberException;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.InviteHomeReq;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -51,10 +53,27 @@ public class HomeService {
                         }));
     }
 
-    public Flux<Home> getHomes(Mono<String> memId) {
+    public Flux<GetHomesRes.HomeDto> getHomes(Mono<String> memId) {
         Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId);
         return memberMono
-                .flatMapMany(member -> homeRepository.findAllById(member.getHomes().stream().map(MemberHome::getHomeId).collect(Collectors.toList())));
+                .flatMap(member -> homeRepository.findAllById(member.getHomeIds())
+                        .collectList()
+                        .map(homes -> Tuples.of(member, homes)))
+                .map(tuple -> {
+                    Member member = tuple.getT1();
+                    List<Home> homes = tuple.getT2();
+                    return member.getHomes().stream()
+                            .flatMap(memberHome -> homes.stream()
+                                    .filter(h -> memberHome.getHomeId().equals(h.getId()))
+                                    .map(h -> {
+                                        GetHomesRes.HomeDto homeDto = HomeMapper.INSTANCE.toGetHomesHomeDto(h);
+                                        homeDto.setState(memberHome.getState());
+                                        homeDto.setInvitor(memberHome.getInvitor());
+                                        return homeDto;
+                                    }))
+                            .collect(Collectors.toList());
+                })
+                .flatMapMany(Flux::fromIterable);
     }
 
     private Mono<Member> checkHomeNameDuplicated(Member member, String homeName) {
