@@ -21,6 +21,7 @@ import reactor.util.function.Tuples;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -155,5 +156,27 @@ public class HomeService {
                     return memberRepository.save(guest)
                             .then(homeRepository.save(home));
                 });
+    }
+
+    // InvalidHomeException
+    public Mono<Home> approveHomeInvitation(Mono<String> memberId, String homeId) {
+        return memberId
+                .flatMap(memberRepository::findByMemId)
+                // 사용자에게 초대된 home 인지 검사
+                .flatMap(member -> {
+                    Optional<MemberHome> memberHome = member.getHomes().stream()
+                            .filter(home -> home.getHomeId().equals(homeId) && home.getState().equals(HomeState.invited))
+                            .findFirst();
+                    if (memberHome.isEmpty()) {
+                        return Mono.error(InvalidHomeException.INSTANCE);
+                    }
+                    memberHome.get().setState(HomeState.shared);
+                    return memberRepository.save(member).thenReturn(member.getMemId());
+                })
+                .flatMap(memId -> homeRepository.findById(homeId)
+                        .flatMap(home -> {
+                            home.approveMember(memId);
+                            return homeRepository.save(home);
+                        }));
     }
 }

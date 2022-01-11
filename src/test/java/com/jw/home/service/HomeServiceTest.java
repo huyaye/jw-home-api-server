@@ -214,4 +214,44 @@ class HomeServiceTest {
         StepVerifier.create(homeMono)
                 .verifyError(InvalidMemberException.class);
     }
+
+    @Test
+    // Home 초대 수락 성공
+    void approveHomeInvitationSucceed() {
+        Member member = new Member();
+        member.setMemId("jw");
+        member.addHome(MemberHome.builder().homeId("1234").state(HomeState.invited).build());
+
+        Home home = new Home();
+        home.setId("1234");
+        home.setInvitedMemberIds(new HashSet<>(List.of("jw")));
+
+        when(memberRepository.findByMemId("jw")).thenReturn(Mono.just(member));
+        when(homeRepository.findById("1234")).thenReturn(Mono.just(home));
+        when(memberRepository.save(member)).thenReturn(Mono.just(member));
+        when(homeRepository.save(home)).thenReturn(Mono.just(home));
+
+        Mono<Home> homeMono = homeService.approveHomeInvitation(Mono.just("jw"), "1234");
+        StepVerifier.create(homeMono)
+                .expectNext(home)
+                .verifyComplete();
+
+        Assertions.assertThat(member.getHomes()).anyMatch(h -> h.getHomeId().equals("1234")
+                && h.getState().equals(HomeState.shared));
+        Assertions.assertThat(home.getInvitedMemberIds()).isEmpty();
+        Assertions.assertThat(home.getSharedMemberIds()).contains("jw");
+    }
+
+    @Test
+    // Home 초대 수락 실패
+    void approveHomeInvitationFailed() {
+        Member member = new Member();
+        member.setMemId("jw");
+
+        when(memberRepository.findByMemId("jw")).thenReturn(Mono.just(member));
+
+        Mono<Home> homeMono = homeService.approveHomeInvitation(Mono.just("jw"), "1234");
+        StepVerifier.create(homeMono)
+            .verifyError(InvalidHomeException.class);
+    }
 }

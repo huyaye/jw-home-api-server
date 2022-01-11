@@ -16,6 +16,7 @@ public class HomeRouter {
                 .GET("/api/v1/homes", homeHandler::getHomes)
                 .DELETE("/api/v1/homes", homeHandler::withdrawHomes)
                 .POST("/api/v1/homes/invite", homeHandler::inviteHome)
+                .PUT("/api/v1/homes/{homeId}/invite/approve", homeHandler::approveHomeInvitation)
                 .build();
     }
 

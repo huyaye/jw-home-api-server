@@ -53,4 +53,12 @@ public class HomeHandler {
                 .flatMap(home -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, Collections.emptyMap())));
     }
+
+    public Mono<ServerResponse> approveHomeInvitation(ServerRequest request) {
+        Mono<String> memberId = AuthInfoManager.getRequestMemId();
+        String homeId = request.pathVariable("homeId");
+        return homeService.approveHomeInvitation(memberId, homeId)
+                .then(ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, Collections.emptyMap())));
+    }
 }

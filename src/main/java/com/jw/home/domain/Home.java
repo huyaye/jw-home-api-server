@@ -63,4 +63,12 @@ public class Home {
 		sharedMemberIds.add(memberId);
 	}
 
+	public void approveMember(String memId) {
+		invitedMemberIds.remove(memId);
+		if (sharedMemberIds == null) {
+			sharedMemberIds = new HashSet<>();
+		}
+		sharedMemberIds.add(memId);
+	}
+
 }
