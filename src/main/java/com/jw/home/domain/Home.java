@@ -71,4 +71,13 @@ public class Home {
 		sharedMemberIds.add(memId);
 	}
 
+	public void evictMember(String memId) {
+		if (sharedMemberIds != null) {
+			sharedMemberIds.remove(memId);
+		}
+		if (invitedMemberIds != null) {
+			invitedMemberIds.remove(memId);
+		}
+	}
+
 }

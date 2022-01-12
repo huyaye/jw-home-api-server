@@ -108,7 +108,7 @@ public class HomeService {
                     String memberId = m.getKey();
                     List<String> targetHomeIds = m.getValue().collect(Collectors.toList());
                     return homeRepository.findAllById(targetHomeIds)
-                            .doOnNext(home -> home.getSharedMemberIds().remove(memberId))
+                            .doOnNext(home -> home.evictMember(memberId))
                             .flatMap(home -> {
                                 if (home.hasNoRelatedMembers()) {
                                     return homeRepository.delete(home).thenReturn(home.getId());
