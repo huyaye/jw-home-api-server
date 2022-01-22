@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.jw.home</groupId>
 	<artifactId>api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>jw-home-api-server</name>
 	<description>IoT API Server</description>
 	<properties>
@@ -92,6 +92,32 @@
 							<version>${mapstruct.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>dockerfile-maven-plugin</artifactId>
+				<version>1.4.13</version>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>tag</id>
+						<goals>
+							<goal>tag</goal>
+						</goals>
+						<configuration>
+							<tag>latest</tag>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<repository>jwfeb05/${project.name}</repository>
+					<tag>${project.version}</tag>
 				</configuration>
 			</plugin>
 		</plugins>
