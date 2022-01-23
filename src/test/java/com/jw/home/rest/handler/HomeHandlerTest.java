@@ -64,7 +64,7 @@ class HomeHandlerTest {
         addHomeDto.setRooms(Collections.emptyList());
 
         webClient.mutateWith(mockOpaqueToken()
-                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
                 .post().uri("/api/v1/homes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(addHomeDto), AddHomeReq.class)
@@ -82,7 +82,7 @@ class HomeHandlerTest {
         GetHomesRes.HomeDto homeDto = HomeMapper.INSTANCE.toGetHomesHomeDto(home);
         when(homeService.getHomes(any())).thenReturn(Flux.just(homeDto));
         webClient.mutateWith(mockOpaqueToken()
-                .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
+                .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
                 .get().uri("/api/v1/homes")
                 .exchange()
                 .expectStatus().isOk()
@@ -95,7 +95,7 @@ class HomeHandlerTest {
 
         when(homeService.getHomes(any())).thenReturn(Flux.empty());
         webClient.mutateWith(mockOpaqueToken()
-                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
                 .get().uri("/api/v1/homes")
                 .exchange()
                 .expectStatus().isOk()
@@ -112,7 +112,7 @@ class HomeHandlerTest {
         when(homeService.withdrawHomes(any(), eq(List.of("1234", "5678")))).thenReturn(Flux.just("5678"));
 
         webClient.mutateWith(mockOpaqueToken()
-                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_ht.home")))
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
                 .method(HttpMethod.DELETE).uri("/api/v1/homes")
                 .body(Mono.just(new DeleteHomesReqRes(List.of("1234", "5678"))), DeleteHomesReqRes.class)
                 .exchange()
