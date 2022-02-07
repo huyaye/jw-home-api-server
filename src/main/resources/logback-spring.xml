@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_DIR" value="../logs_jw" />
+    <property name="LOG_PATH_BASE_NAME" value="${LOG_DIR}/jw-home-api.log" />
+
+    <appender name="CONSOLE"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <param name="Target" value="System.out" />
+            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%thread] [%X{TRACE_ID}] %-3level %logger{5} - %msg %n</pattern>
+        </layout>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator name="loggingTaskEval">
+                <expression>
+                    return (level &lt; INFO) &amp;&amp; (logger.startsWith("com.jw.home") == false);
+                </expression>
+            </evaluator>
+            <OnMatch>DENY</OnMatch>
+        </filter>
+    </appender>
+
+    <appender name="LOG_BASE_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH_BASE_NAME}</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%thread] [%X{TRACE_ID}] %-3level %logger{5} - %msg %n</Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/jw-home-api.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>400MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator name="loggingTaskEval">
+                <expression>
+                    return (level &lt; INFO) &amp;&amp; (logger.startsWith("com.jw.home") == false);
+                </expression>
+            </evaluator>
+            <OnMatch>DENY</OnMatch>
+        </filter>
+    </appender>
+
+    <springProfile name="develop">
+        <root level="DEBUG">
+            <appender-ref ref="LOG_BASE_FILE" />
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+</configuration>
