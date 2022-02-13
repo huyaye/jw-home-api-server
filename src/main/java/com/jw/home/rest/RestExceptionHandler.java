@@ -1,5 +1,6 @@
 package com.jw.home.rest;
 
+import com.jw.home.common.log.HttpResponseLogDecorator;
 import com.jw.home.exception.CustomBusinessException;
 import com.jw.home.rest.dto.ResponseDto;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -21,6 +23,14 @@ public class RestExceptionHandler extends AbstractErrorWebExceptionHandler {
         super(g, new ResourceProperties(), applicationContext);
         super.setMessageWriters(serverCodecConfigurer.getWriters());
         super.setMessageReaders(serverCodecConfigurer.getReaders());
+    }
+
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable throwable) {
+        exchange = exchange.mutate()
+                .response(new HttpResponseLogDecorator(exchange.getResponse()))
+                .build();
+        return super.handle(exchange, throwable);
     }
 
     @Override
@@ -40,6 +50,6 @@ public class RestExceptionHandler extends AbstractErrorWebExceptionHandler {
         }
 
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .bodyValue(throwable.getMessage());
+                .bodyValue(throwable.toString());
     }
 }
