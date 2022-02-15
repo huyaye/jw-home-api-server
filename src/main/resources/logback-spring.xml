@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_DIR" value="../logs_jw" />
+    <property name="LOG_DIR" value="./logs" />
     <property name="LOG_PATH_BASE_NAME" value="${LOG_DIR}/jw-home-api.log" />
 
     <appender name="CONSOLE"
@@ -46,6 +46,11 @@
     <springProfile name="develop">
         <root level="DEBUG">
             <appender-ref ref="LOG_BASE_FILE" />
+        </root>
+    </springProfile>
+
+    <springProfile name="local">
+        <root level="DEBUG">
             <appender-ref ref="CONSOLE" />
         </root>
     </springProfile>
