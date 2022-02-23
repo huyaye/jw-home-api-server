@@ -6,6 +6,7 @@ import com.jw.home.common.spec.HomeState;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -23,6 +24,7 @@ public class GetHomesRes {
 		private String timezone;
 		private HomeSecurityMode securityMode;
 		private List<RoomDto> rooms;
+		private Set<String> noRoomDeviceIds;
 		private HomeState state;
 		private String invitor;
 	}
@@ -30,8 +32,10 @@ public class GetHomesRes {
 	@Getter
 	@Setter
 	@EqualsAndHashCode
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class RoomDto {
 		private String roomName;
+		private Set<String> deviceIds;
 	}
 
 	private List<HomeDto> homes;

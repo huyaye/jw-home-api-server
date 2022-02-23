@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.jw.home.common.spec.HomeState;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -43,4 +44,14 @@ public class Member {
 	public List<String> getHomeIds() {
 		return homes.stream().map(MemberHome::getHomeId).collect(Collectors.toList());
 	}
+
+    public boolean hasHome(String homeId, HomeState state) {
+		return homes.stream().anyMatch(home -> {
+			boolean existed = home.getHomeId().equals(homeId);
+			if (existed && state != null) {
+				existed = home.getState().equals(state);
+			}
+			return existed;
+		});
+    }
 }

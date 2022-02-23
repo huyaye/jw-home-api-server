@@ -21,6 +21,7 @@ public class CustomSecurityConfiguration {
 			.authorizeExchange()
 			.pathMatchers("/authentication").hasAuthority("SCOPE_jw.home")
 			.pathMatchers("/api/v1/homes").hasAuthority("SCOPE_jw.home")
+			.pathMatchers("/api/v1/devices").hasAuthority("SCOPE_jw.home")
 			.anyExchange().authenticated()
 			.and()
 			/*

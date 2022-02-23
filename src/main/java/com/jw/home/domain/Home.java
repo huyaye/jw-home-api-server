@@ -22,6 +22,7 @@ public class Home {
 	@Setter
 	public static class Room {
 		private String roomName;
+		private Set<String> deviceIds;
 	}
 
 	@Id
@@ -38,6 +39,8 @@ public class Home {
 	private Set<String> sharedMemberIds;
 
 	private Set<String> invitedMemberIds;
+
+	private Set<String> noRoomDeviceIds;
 
 	public boolean hasNoRelatedMembers() {
 		return (sharedMemberIds == null || sharedMemberIds.isEmpty()) &&
@@ -80,4 +83,10 @@ public class Home {
 		}
 	}
 
+	public void addNoRoomDeviceId(String deviceId) {
+		if (noRoomDeviceIds == null) {
+			noRoomDeviceIds = new HashSet<>();
+		}
+		noRoomDeviceIds.add(deviceId);
+	}
 }
