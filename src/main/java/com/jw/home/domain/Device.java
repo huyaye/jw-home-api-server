@@ -24,7 +24,10 @@ public class Device {
 
     String homeId;
 
+    // TODO unique index (serial + connection)
     DeviceConnection connection;
+
+    String serial;
 
     DeviceType type;
 

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -60,8 +61,9 @@ class DeviceServiceTest {
         when(homeRepository.findById("homeId")).thenReturn(Mono.just(home));
         when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
         when(deviceRepository.save(device)).thenReturn(Mono.just(device));
+        when(deviceRepository.existsBySerialAndConnection(any(), any())).thenReturn(Mono.just(false));
 
-        Mono<String> deviceId = deviceService.addDevice(Mono.just("jw"), device);
+        Mono<String> deviceId = deviceService.addDevice("jw", device);
         StepVerifier.create(deviceId)
                 .expectNext("deviceId")
                 .verifyComplete();

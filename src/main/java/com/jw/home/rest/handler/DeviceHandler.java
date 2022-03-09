@@ -1,7 +1,6 @@
 package com.jw.home.rest.handler;
 
 import com.jw.home.domain.mapper.DeviceMapper;
-import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddDeviceReq;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.device.DeviceService;
@@ -22,11 +21,9 @@ public class DeviceHandler {
     private DeviceService deviceService;
 
     public Mono<ServerResponse> addDevice(ServerRequest request) {
-        Mono<String> memId = AuthInfoManager.getRequestMemId();
         return request.bodyToMono(AddDeviceReq.class)
                 .doOnNext(req -> log.debug(req.toString()))
-                .map(DeviceMapper.INSTANCE::toDevice)
-                .flatMap(device -> deviceService.addDevice(memId, device))
+                .flatMap(req -> deviceService.addDevice(req.getUserId(), DeviceMapper.INSTANCE.toDevice(req)))
                 .flatMap(deviceId -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, Collections.singletonMap("id", deviceId))));
     }
