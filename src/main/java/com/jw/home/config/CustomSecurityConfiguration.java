@@ -22,6 +22,7 @@ public class CustomSecurityConfiguration {
 			.pathMatchers("/authentication").hasAuthority("SCOPE_jw.home")
 			.pathMatchers("/api/v1/homes").hasAuthority("SCOPE_jw.home")
 			.pathMatchers("/api/v1/devices").permitAll()	// TODO access control
+			.pathMatchers("/api/v1/devices/control").hasAuthority("SCOPE_jw.home")
 			.anyExchange().authenticated()
 			.and()
 			/*

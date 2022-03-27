@@ -1,7 +1,9 @@
 package com.jw.home.rest.handler;
 
 import com.jw.home.domain.mapper.DeviceMapper;
+import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.dto.AddDeviceReq;
+import com.jw.home.rest.dto.ControlDeviceReq;
 import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.service.device.DeviceService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,5 +28,14 @@ public class DeviceHandler {
                 .flatMap(req -> deviceService.addDevice(req.getUserId(), DeviceMapper.INSTANCE.toDevice(req)))
                 .flatMap(deviceId -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, Collections.singletonMap("id", deviceId))));
+    }
+
+    public Mono<ServerResponse> controlDevice(ServerRequest request) {
+        Mono<String> memId = AuthInfoManager.getRequestMemId();
+        return request.bodyToMono(ControlDeviceReq.class)
+                .doOnNext(req -> log.debug(req.toString()))
+                .flatMap(req -> deviceService.controlDevice(memId, req))
+                .flatMap(res -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, res)));
     }
 }

@@ -1,5 +1,6 @@
 package com.jw.home.service.device;
 
+import com.jw.home.common.spec.CommandType;
 import com.jw.home.common.spec.DeviceConnection;
 import com.jw.home.common.spec.DeviceType;
 import com.jw.home.common.spec.HomeState;
@@ -10,6 +11,9 @@ import com.jw.home.domain.MemberHome;
 import com.jw.home.repository.DeviceRepository;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.ControlDeviceReq;
+import com.jw.home.rest.dto.ControlDeviceRes;
+import com.jw.home.rest.dto.ControlDeviceStatus;
 import com.jw.home.service.device.trait.BrightnessTrait;
 import com.jw.home.service.device.trait.DeviceTrait;
 import com.jw.home.service.device.trait.OnOffTrait;
@@ -39,10 +43,12 @@ class DeviceServiceTest {
     private HomeRepository homeRepository;
     @MockBean
     private DeviceRepository deviceRepository;
+    @MockBean
+    private DeviceServerCaller deviceServerCaller;
 
     @BeforeEach
     void setUp() {
-        deviceService = new DeviceService(memberRepository, homeRepository, deviceRepository);
+        deviceService = new DeviceService(memberRepository, homeRepository, deviceRepository, deviceServerCaller);
     }
 
     @Test
@@ -69,6 +75,42 @@ class DeviceServiceTest {
                 .verifyComplete();
 
         Assertions.assertThat(home.getNoRoomDeviceIds()).contains("deviceId");
+    }
+
+    @Test
+    void controlDevice() {
+        Member member = new Member();
+        member.setMemId("jw");
+
+        Device device = makeLightDevice("homeId");
+        device.setId("deviceId");
+
+        Home home = new Home();
+        home.setId("homeId");
+        home.addSharedMemberId("jw");
+
+        ControlDeviceReq controlDeviceReq = new ControlDeviceReq();
+        controlDeviceReq.setDeviceId("deviceId");
+        controlDeviceReq.setConnection(DeviceConnection.websocket);
+        controlDeviceReq.setCommand(CommandType.OnOff);
+        controlDeviceReq.setParams(Collections.singletonMap("on", false));
+
+        ControlDeviceRes controlDeviceRes = new ControlDeviceRes();
+        controlDeviceRes.setStatus(ControlDeviceStatus.SUCCESS);
+        controlDeviceRes.setStates(Collections.singletonMap("on", false));
+
+        when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
+        when(deviceRepository.findById(controlDeviceReq.getDeviceId())).thenReturn(Mono.just(device));
+        when(homeRepository.findById("homeId")).thenReturn(Mono.just(home));
+        when(deviceServerCaller.controlDevice(controlDeviceReq)).thenReturn(Mono.just(controlDeviceRes));
+
+        Mono<ControlDeviceRes> response = deviceService.controlDevice(Mono.just("jw"), controlDeviceReq);
+        StepVerifier.create(response)
+                .consumeNextWith(res -> {
+                    Assertions.assertThat(res.getStatus()).isEqualTo(ControlDeviceStatus.SUCCESS);
+                    Assertions.assertThat(res.getStates().get("on")).isEqualTo(false);
+                })
+                .verifyComplete();
     }
 
     private Device makeLightDevice(String homeId) {

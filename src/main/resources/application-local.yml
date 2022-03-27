@@ -12,3 +12,7 @@ spring:
           introspection-uri: http://url:9093/oauth/check_token
           client-id: jw-api-server
           client-secret: secret
+device:
+  websocket:
+    server:
+      uri: http://server:9093

@@ -5,8 +5,7 @@ import com.jw.home.common.spec.DeviceType;
 import com.jw.home.common.spec.TraitType;
 import com.jw.home.config.CustomSecurityConfiguration;
 import com.jw.home.domain.Device;
-import com.jw.home.rest.dto.AddDeviceReq;
-import com.jw.home.rest.dto.ResponseDto;
+import com.jw.home.rest.dto.*;
 import com.jw.home.rest.router.DeviceRouter;
 import com.jw.home.service.device.DeviceService;
 import org.assertj.core.api.Assertions;
@@ -69,6 +68,27 @@ class DeviceHandlerTest {
                 .value(res -> {
                     Assertions.assertThat(res.getErrorCode()).isNull();
                     Assertions.assertThat(res.getResultData().get("id")).isEqualTo("deviceId");
+                });
+    }
+
+    @Test
+    void controlDevice() {
+        ControlDeviceReq controlDeviceReq = new ControlDeviceReq();
+        ControlDeviceRes controlDeviceRes = new ControlDeviceRes();
+        controlDeviceRes.setStatus(ControlDeviceStatus.SUCCESS);
+        controlDeviceRes.setStates(Collections.singletonMap("on", false));
+        when(deviceService.controlDevice(any(), any(ControlDeviceReq.class))).thenReturn(Mono.just(controlDeviceRes));
+        webClient.mutateWith(mockOpaqueToken()
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
+                .put().uri("/api/v1/devices/control")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(controlDeviceReq), ControlDeviceReq.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<ResponseDto<ControlDeviceRes>>() {})
+                .value(res -> {
+                    final ControlDeviceRes resultData = res.getResultData();
+                    Assertions.assertThat(resultData.getStatus()).isEqualTo(ControlDeviceStatus.SUCCESS);
                 });
     }
 }

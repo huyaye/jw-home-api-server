@@ -44,9 +44,10 @@ public class RestExceptionHandler extends AbstractErrorWebExceptionHandler {
         if (throwable instanceof CustomBusinessException) {
             final Integer errorCode = ((CustomBusinessException) throwable).getErrorCode();
             final String errorMessage = ((CustomBusinessException) throwable).getErrorMessage();
+            final Object resultData = ((CustomBusinessException) throwable).getResultData();
             return ServerResponse.status(HttpStatus.CONFLICT)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Mono.just(new ResponseDto<>(errorCode, errorMessage, null)), ResponseDto.class);
+                    .body(Mono.just(new ResponseDto<>(errorCode, errorMessage, resultData)), ResponseDto.class);
         }
 
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)

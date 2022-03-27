@@ -52,6 +52,10 @@ public class Home {
 				(invitedMemberIds != null && invitedMemberIds.contains(memId));
 	}
 
+	public boolean hasSharedMember(String memId) {
+		return sharedMemberIds != null && sharedMemberIds.contains(memId);
+	}
+
 	public void addInvitedMemberId(String memberId) {
 		if (invitedMemberIds == null) {
 			invitedMemberIds = new HashSet<>();

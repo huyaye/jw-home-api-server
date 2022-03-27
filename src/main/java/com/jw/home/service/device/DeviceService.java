@@ -3,27 +3,31 @@ package com.jw.home.service.device;
 import com.jw.home.common.spec.HomeState;
 import com.jw.home.domain.Device;
 import com.jw.home.domain.Member;
-import com.jw.home.exception.DeviceDuplicatedException;
-import com.jw.home.exception.InvalidDeviceSpecException;
-import com.jw.home.exception.InvalidHomeException;
+import com.jw.home.exception.*;
 import com.jw.home.repository.DeviceRepository;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
+import com.jw.home.rest.dto.ControlDeviceReq;
+import com.jw.home.rest.dto.ControlDeviceRes;
+import com.jw.home.rest.dto.ControlDeviceStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 @Service
 public class DeviceService {
     private final MemberRepository memberRepository;
     private final HomeRepository homeRepository;
     private final DeviceRepository deviceRepository;
+    private final DeviceServerCaller deviceServerCaller;
 
     public DeviceService(MemberRepository memberRepository,
                          HomeRepository homeRepository,
-                         DeviceRepository deviceRepository) {
+                         DeviceRepository deviceRepository, DeviceServerCaller deviceServerCaller) {
         this.memberRepository = memberRepository;
         this.homeRepository = homeRepository;
         this.deviceRepository = deviceRepository;
+        this.deviceServerCaller = deviceServerCaller;
     }
 
     // TODO Transaction
@@ -47,5 +51,31 @@ public class DeviceService {
                             home.addNoRoomDeviceId(deviceId);
                             return homeRepository.save(home).thenReturn(deviceId);
                         }));
+    }
+
+    public Mono<ControlDeviceRes> controlDevice(Mono<String> memId, ControlDeviceReq req) {
+        Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId).log();
+        return memberMono
+                // Validation
+                .flatMap(m -> deviceRepository.findById(req.getDeviceId())
+                        .map(d -> Tuples.of(m.getMemId(), d)))  // T1:memberId, T2:device
+                .filter(t -> t.getT2().getConnection().equals(req.getConnection()))
+                .flatMap(t -> homeRepository.findById(t.getT2().getHomeId())
+                        .map(h -> Tuples.of(t.getT1(), h)))  // T1:memberId, T2:home
+                .filter(t -> t.getT2().hasSharedMember(t.getT1()))
+                .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
+                // Call device server
+                .flatMap(t -> deviceServerCaller.controlDevice(req))
+                .flatMap(res -> {
+                    if (res.getStatus() == ControlDeviceStatus.ERROR) {
+                        return Mono.error(new DeviceControlException(res));
+                    }
+                    return Mono.just(res);
+                });
+//                .doOnNext(res -> {
+//                    if (res.getStatus() == ControlDeviceStatus.ERROR) {
+//                        throw new DeviceControlException(res);
+//                    }
+//                });
     }
 }
