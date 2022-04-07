@@ -84,6 +84,7 @@ class DeviceServiceTest {
 
         Device device = makeLightDevice("homeId");
         device.setId("deviceId");
+        device.setSerial("serial");
 
         Home home = new Home();
         home.setId("homeId");
@@ -102,7 +103,7 @@ class DeviceServiceTest {
         when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
         when(deviceRepository.findById(controlDeviceReq.getDeviceId())).thenReturn(Mono.just(device));
         when(homeRepository.findById("homeId")).thenReturn(Mono.just(home));
-        when(deviceServerCaller.controlDevice(controlDeviceReq)).thenReturn(Mono.just(controlDeviceRes));
+        when(deviceServerCaller.controlDevice(controlDeviceReq, "serial")).thenReturn(Mono.just(controlDeviceRes));
 
         Mono<ControlDeviceRes> response = deviceService.controlDevice(Mono.just("jw"), controlDeviceReq);
         StepVerifier.create(response)

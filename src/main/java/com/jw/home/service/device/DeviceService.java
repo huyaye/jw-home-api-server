@@ -61,21 +61,16 @@ public class DeviceService {
                         .map(d -> Tuples.of(m.getMemId(), d)))  // T1:memberId, T2:device
                 .filter(t -> t.getT2().getConnection().equals(req.getConnection()))
                 .flatMap(t -> homeRepository.findById(t.getT2().getHomeId())
-                        .map(h -> Tuples.of(t.getT1(), h)))  // T1:memberId, T2:home
-                .filter(t -> t.getT2().hasSharedMember(t.getT1()))
+                        .map(h -> Tuples.of(t.getT1(), t.getT2(), h)))  // T1:memberId, T2:device, T3: home
+                .filter(t -> t.getT3().hasSharedMember(t.getT1()))
                 .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
                 // Call device server
-                .flatMap(t -> deviceServerCaller.controlDevice(req))
+                .flatMap(t -> deviceServerCaller.controlDevice(req, t.getT2().getSerial()))
                 .flatMap(res -> {
                     if (res.getStatus() == ControlDeviceStatus.ERROR) {
                         return Mono.error(new DeviceControlException(res));
                     }
                     return Mono.just(res);
                 });
-//                .doOnNext(res -> {
-//                    if (res.getStatus() == ControlDeviceStatus.ERROR) {
-//                        throw new DeviceControlException(res);
-//                    }
-//                });
     }
 }
