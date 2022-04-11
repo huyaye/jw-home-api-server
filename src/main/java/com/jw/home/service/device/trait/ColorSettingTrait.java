@@ -2,9 +2,11 @@ package com.jw.home.service.device.trait;
 
 import com.jw.home.common.spec.DeviceType;
 import com.jw.home.common.spec.TraitType;
+import com.jw.home.service.device.annotation.TraitState;
 
 import java.util.Map;
 
+@TraitState(names = "color")
 public class ColorSettingTrait extends DeviceTrait {
     public ColorSettingTrait() {
         type = TraitType.ColorSetting;

@@ -12,6 +12,7 @@ public class DeviceRouter {
     @Bean
     public RouterFunction<ServerResponse> deviceRoute(DeviceHandler deviceHandler) {
         return RouterFunctions.route()
+                .GET("/api/v1/admin/devices", deviceHandler::getDevices)
                 .POST("/api/v1/devices", deviceHandler::addDevice)
                 .PUT("/api/v1/devices/control", deviceHandler::controlDevice)
                 .build();

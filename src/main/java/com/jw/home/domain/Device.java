@@ -12,6 +12,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -55,5 +56,11 @@ public class Device {
             }
         }
         return true;
+    }
+
+    public void updateState(Map<String, Object> state) {
+        for (DeviceTrait trait : traits) {
+            trait.updateState(state);
+        }
     }
 }

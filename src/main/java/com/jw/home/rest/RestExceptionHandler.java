@@ -1,6 +1,7 @@
 package com.jw.home.rest;
 
 import com.jw.home.common.log.HttpResponseLogDecorator;
+import com.jw.home.exception.BadRequestParamException;
 import com.jw.home.exception.CustomBusinessException;
 import com.jw.home.rest.dto.ResponseDto;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
@@ -48,6 +49,8 @@ public class RestExceptionHandler extends AbstractErrorWebExceptionHandler {
             return ServerResponse.status(HttpStatus.CONFLICT)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Mono.just(new ResponseDto<>(errorCode, errorMessage, resultData)), ResponseDto.class);
+        } else if (throwable instanceof BadRequestParamException) {
+            return ServerResponse.badRequest().build();
         }
 
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)

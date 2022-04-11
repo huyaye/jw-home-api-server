@@ -2,6 +2,7 @@ package com.jw.home.domain.mapper;
 
 import com.jw.home.domain.Device;
 import com.jw.home.rest.dto.AddDeviceReq;
+import com.jw.home.rest.dto.GetDevicesRes;
 import com.jw.home.service.device.TraitFactory;
 import com.jw.home.service.device.trait.DeviceTrait;
 import org.mapstruct.Mapper;
@@ -31,4 +32,5 @@ public interface DeviceMapper {
         }).collect(Collectors.toList());
     }
 
+    GetDevicesRes.DeviceDto toDeviceDto(Device source);
 }

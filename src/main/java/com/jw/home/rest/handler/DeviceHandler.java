@@ -1,10 +1,14 @@
 package com.jw.home.rest.handler;
 
+import com.jw.home.common.spec.DeviceConnection;
 import com.jw.home.domain.mapper.DeviceMapper;
 import com.jw.home.rest.AuthInfoManager;
+import com.jw.home.rest.annotation.QueryParam;
 import com.jw.home.rest.dto.AddDeviceReq;
 import com.jw.home.rest.dto.ControlDeviceReq;
+import com.jw.home.rest.dto.GetDevicesRes;
 import com.jw.home.rest.dto.ResponseDto;
+import com.jw.home.rest.validator.GetDevicesReqValidator;
 import com.jw.home.service.device.DeviceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +41,16 @@ public class DeviceHandler {
                 .flatMap(req -> deviceService.controlDevice(memId, req))
                 .flatMap(res -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, res)));
+    }
+
+    @QueryParam(validator = GetDevicesReqValidator.class)
+    public Mono<ServerResponse> getDevices(ServerRequest request) {
+        DeviceConnection connection = DeviceConnection.valueOf(request.queryParam("connection").get());
+        String serial = request.queryParam("serial").get();
+        return deviceService.getDevices(connection, serial)
+                .map(DeviceMapper.INSTANCE::toDeviceDto)
+                .collectList()
+                .flatMap(devices -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, new GetDevicesRes(devices))));
     }
 }
