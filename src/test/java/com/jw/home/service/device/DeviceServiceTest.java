@@ -26,9 +26,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -104,6 +102,7 @@ class DeviceServiceTest {
         when(deviceRepository.findById(controlDeviceReq.getDeviceId())).thenReturn(Mono.just(device));
         when(homeRepository.findById("homeId")).thenReturn(Mono.just(home));
         when(deviceServerCaller.controlDevice(controlDeviceReq, "serial")).thenReturn(Mono.just(controlDeviceRes));
+        when(deviceRepository.save(device)).thenReturn(Mono.just(device));
 
         Mono<ControlDeviceRes> response = deviceService.controlDevice(Mono.just("jw"), controlDeviceReq);
         StepVerifier.create(response)
@@ -122,10 +121,14 @@ class DeviceServiceTest {
         device.setName("Smart Light");
 
         DeviceTrait onOffTrait = new OnOffTrait();
-        onOffTrait.setState(Collections.singletonMap("on", true));
+        Map<String, Object> onOffState = new HashMap<>();
+        onOffState.put("on", true);
+        onOffTrait.setState(onOffState);
         onOffTrait.setAttr(Collections.singletonMap("commandOnlyOnOff", false));
         DeviceTrait brightnessTrait = new BrightnessTrait();
-        onOffTrait.setState(Collections.singletonMap("brightness", 65));
+        Map<String, Object> brightState = new HashMap<>();
+        brightState.put("brightness", 65);
+        brightnessTrait.setState(brightState);
         List<DeviceTrait> traits = new ArrayList<>();
         traits.add(onOffTrait);
         traits.add(brightnessTrait);

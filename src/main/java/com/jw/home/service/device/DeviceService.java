@@ -11,19 +11,25 @@ import com.jw.home.repository.MemberRepository;
 import com.jw.home.rest.dto.ControlDeviceReq;
 import com.jw.home.rest.dto.ControlDeviceRes;
 import com.jw.home.rest.dto.ControlDeviceStatus;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 @Service
-@RequiredArgsConstructor
 public class DeviceService {
     private final MemberRepository memberRepository;
     private final HomeRepository homeRepository;
     private final DeviceRepository deviceRepository;
     private final DeviceServerCaller deviceServerCaller;
+
+    public DeviceService(MemberRepository memberRepository, HomeRepository homeRepository,
+                         DeviceRepository deviceRepository, DeviceServerCaller deviceServerCaller) {
+        this.memberRepository = memberRepository;
+        this.homeRepository = homeRepository;
+        this.deviceRepository = deviceRepository;
+        this.deviceServerCaller = deviceServerCaller;
+    }
 
     // TODO Transaction
     public Mono<String> addDevice(String memId, Device device) {
