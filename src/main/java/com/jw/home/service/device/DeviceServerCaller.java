@@ -7,6 +7,7 @@ import com.jw.home.rest.dto.ControlDeviceRes;
 import com.jw.home.rest.dto.ControlDeviceStatus;
 import com.jw.home.service.device.mapper.DeviceServerDtoMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class DeviceServerCaller {
         return webClient.mutate().build()
                 .put()
                 .uri(getUrl(controlData.getConnection()) + "/api/v1/devices/control")
-//                .header("Bearer", accessToken)    // TODO accessToken
+                .header("TRANSACTION_ID", MDC.get("TRACE_ID"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(DeviceServerDtoMapper.INSTANCE.toControlDeviceReq(controlData, deviceSerial)),
                         com.jw.home.service.device.dto.ControlDeviceReq.class)

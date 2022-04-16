@@ -80,6 +80,7 @@ public class DeviceService {
     }
 
     public Flux<Device> getDevices(DeviceConnection connection, String serial) {
-        return deviceRepository.findByConnectionAndSerial(connection, serial);
+        return deviceRepository.findByConnectionAndSerial(connection, serial)
+                .switchIfEmpty(Flux.error(NotFoundDeviceException.INSTANCE));
     }
 }
