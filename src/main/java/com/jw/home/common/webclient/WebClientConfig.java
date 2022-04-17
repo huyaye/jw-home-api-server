@@ -21,7 +21,7 @@ public class WebClientConfig {
     public WebClient webClient() {
         HttpClient httpClient = HttpClient.create()
             .tcpConfiguration(client -> client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000) //miliseconds
-                                .doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(10))
+                                .doOnConnected(conn -> conn.addHandlerLast(new ReadTimeoutHandler(60))
                                     .addHandlerLast(new WriteTimeoutHandler(60))));
         //Memory 조정: 2M (default 256KB)
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
