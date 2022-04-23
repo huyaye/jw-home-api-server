@@ -16,6 +16,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class DeviceService {
     private final MemberRepository memberRepository;
@@ -83,4 +86,26 @@ public class DeviceService {
         return deviceRepository.findByConnectionAndSerial(connection, serial)
                 .switchIfEmpty(Flux.error(NotFoundDeviceException.INSTANCE));
     }
+
+    public Flux<String> deleteDevices(Mono<String> memId, List<String> deviceIds) {
+        Mono<Member> memberMono = memId.flatMap(memberRepository::findByMemId);
+        return memberMono
+                .flatMapMany(member -> homeRepository.findAllById(member.getHomeIds()))
+                .flatMap(home -> {
+                    List<String> targetDeviceIds = deviceIds.stream()
+                            .filter(home::removeDevice).collect(Collectors.toList());
+                    return homeRepository.save(home)
+                            .thenMany(Flux.fromIterable(targetDeviceIds));
+                })
+                .flatMap(this::releaseDeviceResource);
+    }
+
+    public Mono<String> releaseDeviceResource(String deviceId) {
+        // DB 에서 삭제하고 device server 로 리소스 해제 요청을 한다.
+        return deviceRepository.deleteById(deviceId)
+                .doOnNext(Void -> {
+                    // TODO notify device server to disconnect
+                }).thenReturn(deviceId);
+    }
+
 }

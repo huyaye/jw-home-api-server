@@ -4,10 +4,7 @@ import com.jw.home.common.spec.DeviceConnection;
 import com.jw.home.domain.mapper.DeviceMapper;
 import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.annotation.QueryParam;
-import com.jw.home.rest.dto.AddDeviceReq;
-import com.jw.home.rest.dto.ControlDeviceReq;
-import com.jw.home.rest.dto.GetDevicesRes;
-import com.jw.home.rest.dto.ResponseDto;
+import com.jw.home.rest.dto.*;
 import com.jw.home.rest.validator.GetDevicesReqValidator;
 import com.jw.home.service.device.DeviceService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,5 +49,14 @@ public class DeviceHandler {
                 .collectList()
                 .flatMap(devices -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, new GetDevicesRes(devices))));
+    }
+
+    public Mono<ServerResponse> deleteDevices(ServerRequest request) {
+        Mono<String> memId = AuthInfoManager.getRequestMemId();
+        return request.bodyToMono(DeleteDevicesReqRes.class)
+                .flatMapMany(req -> deviceService.deleteDevices(memId, req.getDeviceIds()))
+                .collectList()
+                .flatMap(deletedIds -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, new DeleteDevicesReqRes(deletedIds))));
     }
 }

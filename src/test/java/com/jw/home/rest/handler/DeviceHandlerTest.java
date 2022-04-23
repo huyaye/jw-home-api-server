@@ -15,10 +15,12 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOpaqueToken;
 
@@ -89,6 +92,23 @@ class DeviceHandlerTest {
                 .value(res -> {
                     final ControlDeviceRes resultData = res.getResultData();
                     Assertions.assertThat(resultData.getStatus()).isEqualTo(ControlDeviceStatus.SUCCESS);
+                });
+    }
+
+    @Test
+    void deleteDevices() {
+        when(deviceService.deleteDevices(any(), eq(List.of("did-1", "did-2", "did-3")))).thenReturn(Flux.just("did-1", "did-2"));
+
+        webClient.mutateWith(mockOpaqueToken()
+                        .authorities(AuthorityUtils.createAuthorityList("SCOPE_jw.home")))
+                .method(HttpMethod.DELETE).uri("/api/v1/devices")
+                .body(Mono.just(new DeleteDevicesReqRes(List.of("did-1", "did-2", "did-3"))), DeleteDevicesReqRes.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(new ParameterizedTypeReference<ResponseDto<DeleteDevicesReqRes>>() {})
+                .value(res -> {
+                    Assertions.assertThat(res.getErrorCode()).isNull();
+                    Assertions.assertThat(res.getResultData().getDeviceIds()).hasSize(2).contains("did-1", "did-2");
                 });
     }
 }

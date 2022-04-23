@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -110,6 +111,30 @@ class DeviceServiceTest {
                     Assertions.assertThat(res.getStatus()).isEqualTo(ControlDeviceStatus.SUCCESS);
                     Assertions.assertThat(res.getStates().get("on")).isEqualTo(false);
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void deleteDevices() {
+        Member member = new Member();
+        member.setMemId("jw");
+        member.addHome(MemberHome.builder().homeId("home1").state(HomeState.shared).build());
+
+        Home home = new Home();
+        home.setId("home1");
+        home.addNoRoomDeviceId("did-1");
+        Home.Room room = new Home.Room();
+        room.setDeviceIds(new HashSet<>(List.of("did-2")));
+        home.setRooms(List.of(room));
+
+        when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
+        when(homeRepository.findAllById(member.getHomeIds())).thenReturn(Flux.just(home));
+        when(homeRepository.save(home)).thenReturn(Mono.just(home));
+        when(deviceRepository.deleteById(anyString())).thenReturn(Mono.empty());
+
+        Flux<String> deletedIds = deviceService.deleteDevices(Mono.just("jw"), List.of("did-1", "did-2", "did-3"));
+        StepVerifier.create(deletedIds)
+                .expectNext("did-1", "did-2")
                 .verifyComplete();
     }
 

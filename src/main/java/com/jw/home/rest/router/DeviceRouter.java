@@ -15,6 +15,7 @@ public class DeviceRouter {
                 .GET("/api/v1/admin/devices", deviceHandler::getDevices)
                 .POST("/api/v1/devices", deviceHandler::addDevice)
                 .PUT("/api/v1/devices/control", deviceHandler::controlDevice)
+                .DELETE("/api/v1/devices", deviceHandler::deleteDevices)
                 .build();
     }
 }
