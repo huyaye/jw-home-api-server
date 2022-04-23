@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -35,12 +36,16 @@ public class DeviceServerCaller {
                 .retrieve()
                 .onStatus(HttpStatus::isError, clientResponse -> {
                     log.warn("failed to call {} device server : {}", controlData.getConnection(), clientResponse.statusCode());
-                    ControlDeviceRes cause = new ControlDeviceRes();
-                    cause.setStatus(ControlDeviceStatus.ERROR);
-                    cause.setCause("deviceOffline");
-                    return Mono.just(new DeviceControlException(cause));
+                    return Mono.error(createDeviceControlException("deviceOffline"));
                 })
-                .bodyToMono(ControlDeviceRes.class);
+                .bodyToMono(ControlDeviceRes.class)
+                .onErrorResume(throwable -> {
+                    if (throwable instanceof WebClientException) {
+                        log.warn("failed to call {} device server : {}", controlData.getConnection(), throwable.getMessage());
+                        return Mono.error(createDeviceControlException("serverOffline"));
+                    }
+                    return Mono.error(throwable);
+                });
     }
 
     private String getUrl(DeviceConnection connection) {
@@ -52,4 +57,12 @@ public class DeviceServerCaller {
                 return null;
         }
     }
+
+    private DeviceControlException createDeviceControlException(String cause) {
+        ControlDeviceRes errorRes = new ControlDeviceRes();
+        errorRes.setStatus(ControlDeviceStatus.ERROR);
+        errorRes.setCause(cause);
+        return new DeviceControlException(errorRes);
+    }
+
 }
