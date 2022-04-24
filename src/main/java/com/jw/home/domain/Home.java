@@ -110,4 +110,20 @@ public class Home {
         }
         return false;
     }
+
+    public Set<String> getDeviceIds() {
+        Set<String> allDeviceIds = new HashSet<>();
+        if (noRoomDeviceIds != null) {
+            allDeviceIds.addAll(noRoomDeviceIds);
+        }
+        if (rooms != null) {
+            for (Room room : rooms) {
+                Set<String> deviceIds = room.getDeviceIds();
+                if (deviceIds != null) {
+                    allDeviceIds.addAll(deviceIds);
+                }
+            }
+        }
+        return allDeviceIds;
+    }
 }

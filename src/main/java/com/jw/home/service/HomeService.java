@@ -13,6 +13,7 @@ import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
 import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.InviteHomeReq;
+import com.jw.home.service.device.DeviceService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,18 +23,19 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class HomeService {
-
     private final MemberRepository memberRepository;
-
     private final HomeRepository homeRepository;
+    private final DeviceService deviceService;
 
-    public HomeService(MemberRepository memberRepository, HomeRepository homeRepository) {
+    public HomeService(MemberRepository memberRepository, HomeRepository homeRepository, DeviceService deviceService) {
         this.memberRepository = memberRepository;
         this.homeRepository = homeRepository;
+        this.deviceService = deviceService;
     }
 
     // HomeLimitException, HomeDuplicatedException
@@ -111,7 +113,12 @@ public class HomeService {
                             .doOnNext(home -> home.evictMember(memberId))
                             .flatMap(home -> {
                                 if (home.hasNoRelatedMembers()) {
-                                    return homeRepository.delete(home).thenReturn(home.getId());
+                                    return homeRepository.delete(home)
+                                            .thenMany(Flux.fromStream(
+                                                    home.getDeviceIds().stream()
+                                                    .map(deviceService::releaseDeviceResource)))
+                                                    .flatMap(Function.identity())
+                                            .then(Mono.just(home.getId()));
                                 } else {
                                     return homeRepository.save(home).thenReturn(home.getId());
                                 }

@@ -13,6 +13,7 @@ import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
 import com.jw.home.rest.dto.GetHomesRes;
 import com.jw.home.rest.dto.InviteHomeReq;
+import com.jw.home.service.device.DeviceService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,12 +39,14 @@ class HomeServiceTest {
     private MemberRepository memberRepository;
     @MockBean
     private HomeRepository homeRepository;
+    @MockBean
+    private DeviceService deviceService;
 
     private Home homeToAdd;
 
     @BeforeEach
     void setUp() {
-        homeService = new HomeService(memberRepository, homeRepository);
+        homeService = new HomeService(memberRepository, homeRepository, deviceService);
 
         homeToAdd = new Home();
         homeToAdd.setId("61a22c8895f77204b8f602ab");
