@@ -14,7 +14,9 @@ import java.util.Map;
 @Setter
 @ToString
 @NoArgsConstructor
-public class ControlDeviceReq {
+public class ControlReqMsg {
+    @NotEmpty
+    String transactionId;
     @NotEmpty
     String serial;
     @NotEmpty

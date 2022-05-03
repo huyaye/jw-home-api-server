@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.jw.home</groupId>
 	<artifactId>api</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<name>jw-home-api-server</name>
 	<description>IoT API Server</description>
 	<properties>
@@ -39,6 +39,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
 		</dependency>
 
 		<!-- Java bean validation -->

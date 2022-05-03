@@ -1,8 +1,10 @@
 package com.jw.home.service.device.mapper;
 
 import com.jw.home.rest.dto.ControlDeviceReq;
+import com.jw.home.rest.dto.ControlDeviceRes;
+import com.jw.home.service.device.dto.ControlReqMsg;
+import com.jw.home.service.device.dto.ControlResMsg;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
@@ -10,5 +12,7 @@ import org.mapstruct.factory.Mappers;
 public interface DeviceServerDtoMapper {
     DeviceServerDtoMapper INSTANCE = Mappers.getMapper(DeviceServerDtoMapper.class);
 
-    com.jw.home.service.device.dto.ControlDeviceReq toControlDeviceReq(com.jw.home.rest.dto.ControlDeviceReq controlDeviceReq, String serial);
+    ControlReqMsg toControlReqMsg(ControlDeviceReq controlDeviceReq, String transactionId, String serial);
+
+    ControlDeviceRes toControlDeviceRes(ControlResMsg controlresMsg);
 }

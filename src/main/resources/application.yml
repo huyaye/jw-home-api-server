@@ -5,6 +5,15 @@ spring:
     mongodb:
       uri: mongodb://user:pass@url:27017/jw-home?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
       authentication-database: admin
+  redis:
+    host: host
+    port: 6379
+    password: password
+    pubsub:
+      device:
+        control-request-channel-postfix: -control-request
+        control-response-channel-postfix: -control-response
+        control-block-seconds: 15
   security:
     oauth2:
       resourceserver:
@@ -12,7 +21,3 @@ spring:
           introspection-uri: http://url:9093/oauth/check_token
           client-id: jw-api-server
           client-secret: secret
-device:
-  websocket:
-    server:
-      uri: http://server:9093
