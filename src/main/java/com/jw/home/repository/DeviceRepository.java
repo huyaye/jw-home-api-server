@@ -9,5 +9,5 @@ import reactor.core.publisher.Mono;
 public interface DeviceRepository extends ReactiveMongoRepository<Device, String> {
     Mono<Boolean> existsBySerialAndConnection(String serial, DeviceConnection connection);
 
-    Flux<Device> findByConnectionAndSerial(DeviceConnection connection, String serial);
+    Mono<Device> findByConnectionAndSerial(DeviceConnection connection, String serial);
 }

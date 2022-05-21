@@ -82,9 +82,10 @@ public class DeviceService {
                 });
     }
 
-    public Flux<Device> getDevices(DeviceConnection connection, String serial) {
+    public Mono<String> getDeviceId(DeviceConnection connection, String serial) {
         return deviceRepository.findByConnectionAndSerial(connection, serial)
-                .switchIfEmpty(Flux.error(NotFoundDeviceException.INSTANCE));
+                .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
+                .map(Device::getId);
     }
 
     public Flux<String> deleteDevices(Mono<String> memId, List<String> deviceIds) {

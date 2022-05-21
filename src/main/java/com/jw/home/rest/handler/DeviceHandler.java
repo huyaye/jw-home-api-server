@@ -4,7 +4,10 @@ import com.jw.home.common.spec.DeviceConnection;
 import com.jw.home.domain.mapper.DeviceMapper;
 import com.jw.home.rest.AuthInfoManager;
 import com.jw.home.rest.annotation.QueryParam;
-import com.jw.home.rest.dto.*;
+import com.jw.home.rest.dto.AddDeviceReq;
+import com.jw.home.rest.dto.ControlDeviceReq;
+import com.jw.home.rest.dto.DeleteDevicesReqRes;
+import com.jw.home.rest.dto.ResponseDto;
 import com.jw.home.rest.validator.GetDevicesReqValidator;
 import com.jw.home.service.device.DeviceService;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +44,12 @@ public class DeviceHandler {
     }
 
     @QueryParam(validator = GetDevicesReqValidator.class)
-    public Mono<ServerResponse> getDevices(ServerRequest request) {
+    public Mono<ServerResponse> getDeviceId(ServerRequest request) {
         DeviceConnection connection = DeviceConnection.valueOf(request.queryParam("connection").get());
         String serial = request.queryParam("serial").get();
-        return deviceService.getDevices(connection, serial)
-                .map(DeviceMapper.INSTANCE::toDeviceDto)
-                .collectList()
-                .flatMap(devices -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(new ResponseDto<>(null, null, new GetDevicesRes(devices))));
+        return deviceService.getDeviceId(connection, serial)
+                .flatMap(deviceId -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, Collections.singletonMap("id", deviceId))));
     }
 
     public Mono<ServerResponse> deleteDevices(ServerRequest request) {
