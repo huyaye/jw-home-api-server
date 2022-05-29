@@ -14,6 +14,12 @@ spring:
         control-request-channel-postfix: -control-request
         control-response-channel-postfix: -control-response
         control-block-seconds: 15
+  kafka:
+    bootstrap-servers: broker:9092
+    consumer:
+      group-id: group.device-state.save
+    topics:
+      device-state: ec2.jwhome.dev.device-state.json
   security:
     oauth2:
       resourceserver:

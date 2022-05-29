@@ -4,13 +4,15 @@ import com.jw.home.common.spec.DeviceConnection;
 import com.jw.home.common.spec.HomeState;
 import com.jw.home.domain.Device;
 import com.jw.home.domain.Member;
-import com.jw.home.exception.*;
+import com.jw.home.exception.DeviceDuplicatedException;
+import com.jw.home.exception.InvalidDeviceSpecException;
+import com.jw.home.exception.InvalidHomeException;
+import com.jw.home.exception.NotFoundDeviceException;
 import com.jw.home.repository.DeviceRepository;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
 import com.jw.home.rest.dto.ControlDeviceReq;
 import com.jw.home.rest.dto.ControlDeviceRes;
-import com.jw.home.rest.dto.ControlDeviceStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -69,17 +71,7 @@ public class DeviceService {
                 .filter(t -> t.getT3().hasSharedMember(t.getT1()))
                 .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
                 // Call device server
-                .flatMap(t -> deviceServerCaller.controlDevice(req, t.getT2().getSerial())
-                        .map(res -> Tuples.of(res, t.getT2()))) // T1:res, T2:device
-                .flatMap(t -> {
-                    ControlDeviceRes res = t.getT1();
-                    if (res.getStatus() == ControlDeviceStatus.ERROR) {
-                        return Mono.error(new DeviceControlException(res));
-                    }
-                    Device device = t.getT2();
-                    device.updateState(res.getStates());
-                    return deviceRepository.save(device).thenReturn(t.getT1());
-                });
+                .flatMap(t -> deviceServerCaller.controlDevice(req, t.getT2().getSerial()));
     }
 
     public Mono<String> getDeviceId(DeviceConnection connection, String serial) {
