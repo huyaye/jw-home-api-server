@@ -61,4 +61,14 @@ public class HomeHandler {
                 .then(ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(new ResponseDto<>(null, null, Collections.emptyMap())));
     }
+
+    public Mono<ServerResponse> checkHomeAndGetTimezone(ServerRequest request) {
+        String userId = request.queryParam("userId").get();
+        String homeId = request.queryParam("homeId").get();
+        String[] deviceIds = request.queryParam("deviceIds").get().split(",");
+
+        return homeService.checkHomeAndGetTimezone(userId, homeId, deviceIds)
+                .flatMap(timezone -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(new ResponseDto<>(null, null, Collections.singletonMap("timezone", timezone))));
+    }
 }

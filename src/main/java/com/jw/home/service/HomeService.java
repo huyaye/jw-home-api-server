@@ -5,10 +5,7 @@ import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
 import com.jw.home.domain.mapper.HomeMapper;
-import com.jw.home.exception.HomeDuplicatedException;
-import com.jw.home.exception.HomeLimitException;
-import com.jw.home.exception.InvalidHomeException;
-import com.jw.home.exception.InvalidMemberException;
+import com.jw.home.exception.*;
 import com.jw.home.repository.HomeRepository;
 import com.jw.home.repository.MemberRepository;
 import com.jw.home.rest.dto.GetHomesRes;
@@ -185,5 +182,22 @@ public class HomeService {
                             home.approveMember(memId);
                             return homeRepository.save(home);
                         }));
+    }
+
+    public Mono<String> checkHomeAndGetTimezone(String userId, String homeId, String[] deviceIds) {
+        return homeRepository.findById(homeId)
+            .switchIfEmpty(Mono.error(InvalidHomeException.INSTANCE))
+            .filter(home -> {
+                if (deviceIds != null && deviceIds.length > 0) {
+                    for (String deviceId : deviceIds) {
+                        if (!home.getDeviceIds().contains(deviceId)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            })
+            .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
+            .map(Home::getTimezone);
     }
 }

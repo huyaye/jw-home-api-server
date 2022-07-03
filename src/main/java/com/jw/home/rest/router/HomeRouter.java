@@ -12,6 +12,7 @@ public class HomeRouter {
     @Bean
     public RouterFunction<ServerResponse> homeRoute(HomeHandler homeHandler) {
         return RouterFunctions.route()
+                .GET("/api/v1/admin/check/home", homeHandler::checkHomeAndGetTimezone)
                 .POST("/api/v1/homes", homeHandler::createHome)
                 .GET("/api/v1/homes", homeHandler::getHomes)
                 .DELETE("/api/v1/homes", homeHandler::withdrawHomes)
