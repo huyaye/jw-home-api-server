@@ -1,6 +1,8 @@
 server:
   port: 9092
 spring:
+  application:
+    name: api-server
   data:
     mongodb:
       uri: mongodb://user:pass@url:27017/jw-home?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
@@ -27,3 +29,9 @@ spring:
           introspection-uri: http://url:9093/oauth/check_token
           client-id: jw-api-server
           client-secret: secret
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka
