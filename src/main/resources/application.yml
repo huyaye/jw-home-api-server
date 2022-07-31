@@ -5,19 +5,19 @@ spring:
     name: api-server
   data:
     mongodb:
-      uri: mongodb://user:pass@url:27017/jw-home?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
+      uri: mongodb://${MONGODB_USER:admin}:${MONGODB_PASS:pass}@${MONGODB_HOST:localhost}:${MONGODB_PORT:27017}/jw-home?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
       authentication-database: admin
   redis:
-    host: host
-    port: 6379
-    password: password
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASS:pass}
     pubsub:
       device:
         control-request-channel-postfix: -control-request
         control-response-channel-postfix: -control-response
         control-block-seconds: 15
   kafka:
-    bootstrap-servers: broker:9092
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
     consumer:
       group-id: group.device-state.save
     topics:
@@ -30,8 +30,11 @@ spring:
           client-id: jw-api-server
           client-secret: secret
 eureka:
+  instance:
+    prefer-ip-address: true
+    hostname: eureka-0
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
+      defaultZone: ${EUREKA_SERVER_ADDRESS:http://127.0.0.1:8761/eureka}
