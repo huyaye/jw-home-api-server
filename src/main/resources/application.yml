@@ -25,6 +25,9 @@ spring:
   security:
     oauth2:
       resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/jw-home}
+          jwk-set-uri: ${JWT_SET_URI:http://localhost:8080/realms/jw-home/protocol/openid-connect/certs}
         opaquetoken:
           introspection-uri: http://url:9093/oauth/check_token
           client-id: jw-api-server

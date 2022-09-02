@@ -1,15 +1,15 @@
 package com.jw.home.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Arrays;
+import reactor.core.publisher.Mono;
 
 @EnableWebFluxSecurity
 public class CustomSecurityConfiguration {
@@ -31,17 +31,17 @@ public class CustomSecurityConfiguration {
 			 * Select using JWT or OpaqueToken
 			 */
 //			.oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::opaqueToken);
-			.oauth2ResourceServer(ServerHttpSecurity.OAuth2ResourceServerSpec::jwt);
+			.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(grantedAuthoritiesExtractor()))
+			);
 		// @formatter:on
 		return http.build();
 	}
 
 	@Bean
-	public ReactiveJwtDecoder jwtDecoder() {
-		byte[] key = "jwt_test_sign_key".getBytes();
-		byte[] paddedKey = key.length < 32 ? Arrays.copyOf(key, 32) : key;
-
-		SecretKey signKey = new SecretKeySpec(paddedKey, "HS256");
-		return NimbusReactiveJwtDecoder.withSecretKey(signKey).build();
+	Converter<Jwt, Mono<AbstractAuthenticationToken>> grantedAuthoritiesExtractor() {
+		JwtAuthenticationConverter jwtAuthenticationConverter =
+				new JwtAuthenticationConverter();
+		jwtAuthenticationConverter.setPrincipalClaimName("preferred_username");
+		return new ReactiveJwtAuthenticationConverterAdapter(jwtAuthenticationConverter);
 	}
 }
