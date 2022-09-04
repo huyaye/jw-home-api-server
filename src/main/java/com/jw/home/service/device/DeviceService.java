@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,6 +79,10 @@ public class DeviceService {
         return deviceRepository.findByConnectionAndSerial(connection, serial)
                 .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
                 .map(Device::getId);
+    }
+
+    public Flux<Device> getDevices(Set<String> deviceIds) {
+        return deviceRepository.findAllById(deviceIds);
     }
 
     public Flux<String> deleteDevices(Mono<String> memId, List<String> deviceIds) {

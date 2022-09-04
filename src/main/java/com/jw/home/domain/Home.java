@@ -23,6 +23,13 @@ public class Home {
     public static class Room {
         private String roomName;
         private Set<String> deviceIds;
+
+        public boolean containsDeviceId(String deviceId) {
+            if (deviceIds != null) {
+                return deviceIds.contains(deviceId);
+            }
+            return false;
+        }
     }
 
     @Id

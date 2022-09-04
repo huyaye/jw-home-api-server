@@ -1,9 +1,11 @@
 package com.jw.home.service;
 
 import com.jw.home.common.spec.HomeState;
+import com.jw.home.domain.Device;
 import com.jw.home.domain.Home;
 import com.jw.home.domain.Member;
 import com.jw.home.domain.MemberHome;
+import com.jw.home.domain.mapper.DeviceMapper;
 import com.jw.home.domain.mapper.HomeMapper;
 import com.jw.home.exception.*;
 import com.jw.home.repository.HomeRepository;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class HomeService {
@@ -59,21 +62,37 @@ public class HomeService {
                 .flatMap(member -> homeRepository.findAllById(member.getHomeIds())
                         .collectList()
                         .map(homes -> Tuples.of(member, homes)))
-                .map(tuple -> {
+                .flatMapMany(tuple -> {
                     Member member = tuple.getT1();
                     List<Home> homes = tuple.getT2();
-                    return member.getHomes().stream()
+                    Stream<Mono<GetHomesRes.HomeDto>> monoStream = member.getHomes().stream()
                             .flatMap(memberHome -> homes.stream()
                                     .filter(h -> memberHome.getHomeId().equals(h.getId()))
                                     .map(h -> {
                                         GetHomesRes.HomeDto homeDto = HomeMapper.INSTANCE.toGetHomesHomeDto(h);
                                         homeDto.setState(memberHome.getState());
                                         homeDto.setInvitor(memberHome.getInvitor());
-                                        return homeDto;
-                                    }))
-                            .collect(Collectors.toList());
-                })
-                .flatMapMany(Flux::fromIterable);
+
+                                        return deviceService.getDevices(h.getDeviceIds())
+                                                .collectList()
+                                                .map(deviceList -> {
+                                                    for (Device device : deviceList) {
+                                                        GetHomesRes.DeviceDto deviceDto = DeviceMapper.INSTANCE.toDeviceDto(device);
+                                                        if (h.getNoRoomDeviceIds().contains(device.getId())) {
+                                                            homeDto.addNoRoomDeviceDto(deviceDto);
+                                                        } else {
+                                                            h.getRooms().forEach(room -> {
+                                                                if (room.containsDeviceId(device.getId())) {
+                                                                    homeDto.addDeviceDtoToRoom(deviceDto, room.getRoomName());
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                    return homeDto;
+                                                });
+                                    }));
+                    return Flux.fromStream(monoStream).flatMap(Function.identity());
+                });
     }
 
     private Mono<Member> checkHomeNameDuplicated(Member member, String homeName) {
@@ -113,8 +132,8 @@ public class HomeService {
                                     return homeRepository.delete(home)
                                             .thenMany(Flux.fromStream(
                                                     home.getDeviceIds().stream()
-                                                    .map(deviceService::releaseDeviceResource)))
-                                                    .flatMap(Function.identity())
+                                                            .map(deviceService::releaseDeviceResource)))
+                                            .flatMap(Function.identity())
                                             .then(Mono.just(home.getId()));
                                 } else {
                                     return homeRepository.save(home).thenReturn(home.getId());
@@ -186,18 +205,18 @@ public class HomeService {
 
     public Mono<String> checkHomeAndGetTimezone(String userId, String homeId, String[] deviceIds) {
         return homeRepository.findById(homeId)
-            .switchIfEmpty(Mono.error(InvalidHomeException.INSTANCE))
-            .filter(home -> {
-                if (deviceIds != null && deviceIds.length > 0) {
-                    for (String deviceId : deviceIds) {
-                        if (!home.getDeviceIds().contains(deviceId)) {
-                            return false;
+                .switchIfEmpty(Mono.error(InvalidHomeException.INSTANCE))
+                .filter(home -> {
+                    if (deviceIds != null && deviceIds.length > 0) {
+                        for (String deviceId : deviceIds) {
+                            if (!home.getDeviceIds().contains(deviceId)) {
+                                return false;
+                            }
                         }
                     }
-                }
-                return true;
-            })
-            .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
-            .map(Home::getTimezone);
+                    return true;
+                })
+                .switchIfEmpty(Mono.error(NotFoundDeviceException.INSTANCE))
+                .map(Home::getTimezone);
     }
 }

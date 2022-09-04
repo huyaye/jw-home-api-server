@@ -112,6 +112,7 @@ class HomeServiceTest {
 
         when(memberRepository.findByMemId(anyString())).thenReturn(Mono.just(member));
         when(homeRepository.findAllById(List.of("61a22c8895f77204b8f602ab"))).thenReturn(Flux.just(homeToAdd));
+        when(deviceService.getDevices(any())).thenReturn(Flux.empty());
 
         Flux<GetHomesRes.HomeDto> homeFlux = homeService.getHomes(Mono.just("jw"));
         StepVerifier.create(homeFlux)
