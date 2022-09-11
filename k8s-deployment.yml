@@ -68,6 +68,16 @@ spec:
                 configMapKeyRef:
                   name: jw-home-cm
                   key: KAFKA_BROKERS
+            - name: JWT_ISSUER_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: jw-home-cm
+                  key: JWT_ISSUER_URI
+            - name: JWT_SET_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: jw-home-cm
+                  key: JWT_SET_URI
             - name: EUREKA_SERVER_ADDRESS
               valueFrom:
                 configMapKeyRef:
