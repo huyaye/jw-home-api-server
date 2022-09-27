@@ -32,6 +32,14 @@ spring:
           introspection-uri: http://url:9093/oauth/check_token
           client-id: jw-api-server
           client-secret: secret
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
 eureka:
   instance:
     prefer-ip-address: true

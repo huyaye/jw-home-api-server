@@ -96,9 +96,22 @@ metadata:
 spec:
   ports:
     - port: 9092 #CHANGE
+      name: http-traffic
       protocol: TCP
       targetPort: 9092 #CHANGE
   selector:
     app: api-server
   sessionAffinity: None #CHANGE
   type: NodePort
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: api-server
+  endpoints:
+    - port: http-traffic
+      path: "/actuator/prometheus"
